@@ -1,5 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
@@ -7,9 +6,14 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
   </PropertyGroup>
-
+  <ItemGroup>
+    <Compile Remove="GrabScreenshot.xaml.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Remove="GrabScreenshot.xaml" />
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="WPF-UI" Version="3.0.5" />
+    <PackageReference Include="Dapplo.Windows.User32" Version="1.0.28" />
   </ItemGroup>
-
 </Project>

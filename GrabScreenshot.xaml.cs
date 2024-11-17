@@ -1,4 +1,4 @@
-// using Dapplo.Windows.User32;
+using Dapplo.Windows.User32;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -50,7 +50,7 @@ public partial class FullscreenGrab : Window
     {
         InitializeComponent();
         // App.SetTheme();
-        usingTesseract = DefaultSettings.UseTesseract && TesseractHelper.CanLocateTesseractExe();
+        // usingTesseract = DefaultSettings.UseTesseract && TesseractHelper.CanLocateTesseractExe();
     }
 
     #endregion Constructors
@@ -78,12 +78,12 @@ public partial class FullscreenGrab : Window
 
     #region Methods
 
-    // public void SetImageToBackground()
-    // {
-    //     BackgroundImage.Source = null;
-    //     BackgroundImage.Source = ImageMethods.GetWindowBoundsImage(this);
-    //     BackgroundBrush.Opacity = 0.2;
-    // }
+    public void SetImageToBackground()
+    {
+        BackgroundImage.Source = null;
+        BackgroundImage.Source = ImageMethods.GetWindowBoundsImage(this);
+        BackgroundBrush.Opacity = 0.2;
+    }
 
     internal void KeyPressed(Key key, bool? isActive = null)
     {
@@ -210,11 +210,11 @@ public partial class FullscreenGrab : Window
         WindowUtilities.CloseAllFullscreenGrabs();
     }
 
-    private void EditLastGrab_Click(object sender, RoutedEventArgs e)
-    {
-        Close();
-        Singleton<HistoryService>.Instance.GetLastHistoryAsGrabFrame();
-    }
+    // private void EditLastGrab_Click(object sender, RoutedEventArgs e)
+    // {
+    //     Close();
+    //     Singleton<HistoryService>.Instance.GetLastHistoryAsGrabFrame();
+    // }
 
     private void FreezeMenuItem_Click(object? sender = null, RoutedEventArgs? e = null)
     {
@@ -270,127 +270,127 @@ public partial class FullscreenGrab : Window
         posTop = Canvas.GetTop(selectBorder) + (absPosPoint.Y / dpi.PixelsPerDip);
     }
 
-    private void LanguagesComboBox_PreviewMouseDown(object sender, MouseButtonEventArgs e)
-    {
-        if (e.MiddleButton == MouseButtonState.Pressed)
-        {
-            DefaultSettings.LastUsedLang = String.Empty;
-            DefaultSettings.Save();
-        }
-    }
+    // private void LanguagesComboBox_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+    // {
+    //     if (e.MiddleButton == MouseButtonState.Pressed)
+    //     {
+    //         DefaultSettings.LastUsedLang = String.Empty;
+    //         DefaultSettings.Save();
+    //     }
+    // }
 
-    private void LanguagesComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (sender is not ComboBox languageCmbBox || !isComboBoxReady)
-            return;
+    // private void LanguagesComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    // {
+    //     if (sender is not ComboBox languageCmbBox || !isComboBoxReady)
+    //         return;
 
-        if (languageCmbBox.SelectedItem is TessLang tessLang)
-        {
-            DefaultSettings.LastUsedLang = tessLang.CultureDisplayName;
-            DefaultSettings.Save();
+    //     if (languageCmbBox.SelectedItem is TessLang tessLang)
+    //     {
+    //         DefaultSettings.LastUsedLang = tessLang.CultureDisplayName;
+    //         DefaultSettings.Save();
 
-            TableMenuItem.Visibility = Visibility.Collapsed;
-            TableToggleButton.Visibility = Visibility.Collapsed;
-        }
+    //         TableMenuItem.Visibility = Visibility.Collapsed;
+    //         TableToggleButton.Visibility = Visibility.Collapsed;
+    //     }
 
-        if (languageCmbBox.SelectedItem is Language pickedLang)
-        {
-            DefaultSettings.LastUsedLang = pickedLang.LanguageTag;
-            DefaultSettings.Save();
+    //     if (languageCmbBox.SelectedItem is Language pickedLang)
+    //     {
+    //         DefaultSettings.LastUsedLang = pickedLang.LanguageTag;
+    //         DefaultSettings.Save();
 
-            TableMenuItem.Visibility = Visibility.Visible;
-            TableToggleButton.Visibility = Visibility.Visible;
-        }
+    //         TableMenuItem.Visibility = Visibility.Visible;
+    //         TableToggleButton.Visibility = Visibility.Visible;
+    //     }
 
-        int selection = languageCmbBox.SelectedIndex;
+    //     int selection = languageCmbBox.SelectedIndex;
 
-        switch (selection)
-        {
-            case 0:
-                WindowUtilities.FullscreenKeyDown(Key.D1);
-                break;
-            case 1:
-                WindowUtilities.FullscreenKeyDown(Key.D2);
-                break;
-            case 2:
-                WindowUtilities.FullscreenKeyDown(Key.D3);
-                break;
-            case 3:
-                WindowUtilities.FullscreenKeyDown(Key.D4);
-                break;
-            case 4:
-                WindowUtilities.FullscreenKeyDown(Key.D5);
-                break;
-            case 5:
-                WindowUtilities.FullscreenKeyDown(Key.D6);
-                break;
-            case 6:
-                WindowUtilities.FullscreenKeyDown(Key.D7);
-                break;
-            case 7:
-                WindowUtilities.FullscreenKeyDown(Key.D8);
-                break;
-            case 8:
-                WindowUtilities.FullscreenKeyDown(Key.D9);
-                break;
-            default:
-                break;
-        }
-    }
+    //     switch (selection)
+    //     {
+    //         case 0:
+    //             WindowUtilities.FullscreenKeyDown(Key.D1);
+    //             break;
+    //         case 1:
+    //             WindowUtilities.FullscreenKeyDown(Key.D2);
+    //             break;
+    //         case 2:
+    //             WindowUtilities.FullscreenKeyDown(Key.D3);
+    //             break;
+    //         case 3:
+    //             WindowUtilities.FullscreenKeyDown(Key.D4);
+    //             break;
+    //         case 4:
+    //             WindowUtilities.FullscreenKeyDown(Key.D5);
+    //             break;
+    //         case 5:
+    //             WindowUtilities.FullscreenKeyDown(Key.D6);
+    //             break;
+    //         case 6:
+    //             WindowUtilities.FullscreenKeyDown(Key.D7);
+    //             break;
+    //         case 7:
+    //             WindowUtilities.FullscreenKeyDown(Key.D8);
+    //             break;
+    //         case 8:
+    //             WindowUtilities.FullscreenKeyDown(Key.D9);
+    //             break;
+    //         default:
+    //             break;
+    //     }
+    // }
 
-    private static async Task LoadOcrLanguages(ComboBox languagesComboBox, bool usingTesseract, List<FrameworkElement>? tesseractIncompatibleElements = null)
-    {
-        if (languagesComboBox.Items.Count > 0)
-            return;
+    // private static async Task LoadOcrLanguages(ComboBox languagesComboBox, bool usingTesseract, List<FrameworkElement>? tesseractIncompatibleElements = null)
+    // {
+    //     if (languagesComboBox.Items.Count > 0)
+    //         return;
 
-        int count = 0;
-        // TODO Find a way to combine with the ETW language drop down
+    //     int count = 0;
+    //     // TODO Find a way to combine with the ETW language drop down
 
-        bool haveSetLastLang = false;
-        string lastTextLang = DefaultSettings.LastUsedLang;
-        if (usingTesseract)
-        {
-            List<ILanguage> tesseractLanguages = await TesseractHelper.TesseractLanguages();
+    //     bool haveSetLastLang = false;
+    //     string lastTextLang = DefaultSettings.LastUsedLang;
+    //     if (usingTesseract)
+    //     {
+    //         List<ILanguage> tesseractLanguages = await TesseractHelper.TesseractLanguages();
 
-            foreach (ILanguage language in tesseractLanguages)
-            {
-                languagesComboBox.Items.Add(language);
+    //         foreach (ILanguage language in tesseractLanguages)
+    //         {
+    //             languagesComboBox.Items.Add(language);
 
-                if (!haveSetLastLang && language.CultureDisplayName == lastTextLang)
-                {
-                    languagesComboBox.SelectedIndex = count;
-                    haveSetLastLang = true;
+    //             if (!haveSetLastLang && language.CultureDisplayName == lastTextLang)
+    //             {
+    //                 languagesComboBox.SelectedIndex = count;
+    //                 haveSetLastLang = true;
 
-                    if (tesseractIncompatibleElements is not null)
-                        foreach (FrameworkElement element in tesseractIncompatibleElements)
-                            element.Visibility = Visibility.Collapsed;
-                }
+    //                 if (tesseractIncompatibleElements is not null)
+    //                     foreach (FrameworkElement element in tesseractIncompatibleElements)
+    //                         element.Visibility = Visibility.Collapsed;
+    //             }
 
-                count++;
-            }
-            if (languagesComboBox.SelectedIndex == -1)
-                languagesComboBox.SelectedIndex = 0;
-        }
+    //             count++;
+    //         }
+    //         if (languagesComboBox.SelectedIndex == -1)
+    //             languagesComboBox.SelectedIndex = 0;
+    //     }
 
-        IReadOnlyList<Language> possibleOCRLanguages = OcrEngine.AvailableRecognizerLanguages;
+    //     IReadOnlyList<Language> possibleOCRLanguages = OcrEngine.AvailableRecognizerLanguages;
 
-        Language firstLang = LanguageUtilities.GetOCRLanguage();
+    //     Language firstLang = LanguageUtilities.GetOCRLanguage();
 
-        foreach (Language language in possibleOCRLanguages)
-        {
-            languagesComboBox.Items.Add(language);
+    //     foreach (Language language in possibleOCRLanguages)
+    //     {
+    //         languagesComboBox.Items.Add(language);
 
-            if (!haveSetLastLang &&
-                (language.AbbreviatedName.Equals(firstLang?.AbbreviatedName.ToLower(), StringComparison.CurrentCultureIgnoreCase)
-                || language.LanguageTag.Equals(firstLang?.LanguageTag.ToLower(), StringComparison.CurrentCultureIgnoreCase)))
-            {
-                languagesComboBox.SelectedIndex = count;
-                haveSetLastLang = true;
-            }
+    //         if (!haveSetLastLang &&
+    //             (language.AbbreviatedName.Equals(firstLang?.AbbreviatedName.ToLower(), StringComparison.CurrentCultureIgnoreCase)
+    //             || language.LanguageTag.Equals(firstLang?.LanguageTag.ToLower(), StringComparison.CurrentCultureIgnoreCase)))
+    //         {
+    //             languagesComboBox.SelectedIndex = count;
+    //             haveSetLastLang = true;
+    //         }
 
-            count++;
-        }
-    }
+    //         count++;
+    //     }
+    // }
 
     private void NewEditTextMenuItem_Click(object sender, RoutedEventArgs e)
     {
@@ -659,41 +659,41 @@ public partial class FullscreenGrab : Window
         }
     }
 
-    private void SendToEditTextToggleButton_Click(object sender, RoutedEventArgs e)
-    {
-        bool isActive = CheckIfCheckingOrUnchecking(sender);
-        WindowUtilities.FullscreenKeyDown(Key.E, isActive);
-    }
+    // private void SendToEditTextToggleButton_Click(object sender, RoutedEventArgs e)
+    // {
+    //     bool isActive = CheckIfCheckingOrUnchecking(sender);
+    //     WindowUtilities.FullscreenKeyDown(Key.E, isActive);
+    // }
 
-    private void SettingsMenuItem_Click(object sender, RoutedEventArgs e)
-    {
-        WindowUtilities.OpenOrActivateWindow<SettingsWindow>();
-        WindowUtilities.CloseAllFullscreenGrabs();
-    }
+    // private void SettingsMenuItem_Click(object sender, RoutedEventArgs e)
+    // {
+    //     WindowUtilities.OpenOrActivateWindow<SettingsWindow>();
+    //     WindowUtilities.CloseAllFullscreenGrabs();
+    // }
 
-    private void SingleLineMenuItem_Click(object? sender = null, RoutedEventArgs? e = null)
-    {
-        bool isActive = CheckIfCheckingOrUnchecking(sender);
-        WindowUtilities.FullscreenKeyDown(Key.S, isActive);
-        SelectSingleToggleButton(sender);
+    // private void SingleLineMenuItem_Click(object? sender = null, RoutedEventArgs? e = null)
+    // {
+    //     bool isActive = CheckIfCheckingOrUnchecking(sender);
+    //     WindowUtilities.FullscreenKeyDown(Key.S, isActive);
+    //     SelectSingleToggleButton(sender);
 
-        if (isActive)
-        {
-            bool isSingleLineChecked = false;
-            if (SingleLineToggleButton.IsChecked is true)
-                isSingleLineChecked = true;
-            DefaultSettings.FSGMakeSingleLineToggle = isSingleLineChecked;
-            DefaultSettings.Save();
-        }
-    }
+    //     if (isActive)
+    //     {
+    //         bool isSingleLineChecked = false;
+    //         if (SingleLineToggleButton.IsChecked is true)
+    //             isSingleLineChecked = true;
+    //         DefaultSettings.FSGMakeSingleLineToggle = isSingleLineChecked;
+    //         DefaultSettings.Save();
+    //     }
+    // }
 
-    private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+    // private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
     {
         if (historyInfo is not null)
             Singleton<HistoryService>.Instance.SaveToHistory(historyInfo);
     }
 
-    private async void Window_Loaded(object sender, RoutedEventArgs e)
+    // private async void Window_Loaded(object sender, RoutedEventArgs e)
     {
         WindowState = WindowState.Maximized;
         FullWindow.Rect = new System.Windows.Rect(0, 0, Width, Height);
@@ -726,7 +726,7 @@ public partial class FullscreenGrab : Window
             TopButtonsStackPanel.Visibility = Visibility.Visible;
     }
 
-    private void Window_Unloaded(object sender, RoutedEventArgs e)
+    // private void Window_Unloaded(object sender, RoutedEventArgs e)
     {
         BackgroundImage.Source = null;
         BackgroundImage.UpdateLayout();
@@ -778,7 +778,7 @@ public partial class FullscreenGrab : Window
         }
     }
 
-    private void SelectSingleToggleButton(object? sender = null)
+    // private void SelectSingleToggleButton(object? sender = null)
     {
         if (sender is not ToggleButton clickedToggleButton)
         {
@@ -799,7 +799,7 @@ public partial class FullscreenGrab : Window
         clickedToggleButton.IsChecked = true;
     }
 
-    private void TableToggleButton_Click(object? sender = null, RoutedEventArgs? e = null)
+    // private void TableToggleButton_Click(object? sender = null, RoutedEventArgs? e = null)
     {
         bool isActive = CheckIfCheckingOrUnchecking(sender);
         WindowUtilities.FullscreenKeyDown(Key.T, isActive);
