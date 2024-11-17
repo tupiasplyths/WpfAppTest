@@ -49,10 +49,14 @@ namespace WpfAppTest
             }
         }
 
-        // private async void FreezeScreen() 
-        // {
-        //     BackgroundBrush.Opacity = 0;
-        // } 
+        private async void FreezeScreen() 
+        {
+            BackgroundBrush.Opacity = 0;
+            await Task.Delay(100);
+            SetImageToBackground();
+
+
+        } 
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e) {
             TopButtonStack.Visibility = Visibility.Collapsed;
@@ -62,7 +66,7 @@ namespace WpfAppTest
         {   
             WindowState = WindowState.Maximized;
             FullWindow.Rect = new System.Windows.Rect(0, 0, Width, Height);
-
+            FreezeScreen();
             if (IsMouseOver)
             {
                 TopButtonStack.Visibility = Visibility.Visible;
