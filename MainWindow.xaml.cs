@@ -15,16 +15,13 @@ namespace WpfAppTest
         {
             InitializeComponent();
             Grid grid = new Grid();
-            //grid.Children.Add(vancas);
-            //grid.Children.Add(clip);
-            //Content = grid;
         }
 
         public void SetImageToBackground()
         {
             BG.Source = null;
             BG.Source = ImageMethods.GetWindowBoundsImage(this);
-            BG.Opacity = 0.2;
+            BG.Opacity = 0.6;
         }
 
         internal void KeyPressed(Key key, bool? isActive = null) 
@@ -36,28 +33,6 @@ namespace WpfAppTest
                     break;
                 default:
                     break;
-            }
-        }
-
-        private void Button_Click(object sender, RoutedEventArgs e)
-        {
-
-            //RenderTargetBitmap renderTargetBitmap = new RenderTargetBitmap((int)width, (int)height, 96, 96, PixelFormats.Pbgra32);
-
-            DrawingVisual drawingVisual = new DrawingVisual();
-            using (DrawingContext drawingContext = drawingVisual.RenderOpen())
-            {
-                VisualBrush visualBrush = new VisualBrush(vancas);
-                // drawingContext.DrawRectangle(visualBrush, null, new Rect(new Point(-left, top), new Point(width - left, height - top)));
-            }
-            //renderTargetBitmap.Render(drawingVisual);
-
-            // Save the image to a file
-            BitmapEncoder encoder = new PngBitmapEncoder();
-            //encoder.Frames.Add(BitmapFrame.Create(renderTargetBitmap));
-            using (var stream = System.IO.File.Create("./output/captured_image.png"))
-            {
-                encoder.Save(stream);
             }
         }
 
@@ -75,6 +50,21 @@ namespace WpfAppTest
         private void HandleKeyDown(object sender, KeyEventArgs e)
         {
             KeyPressed(e.Key);
+        }
+
+        private void CancelItemClick(object sender, RoutedEventArgs e)
+        {
+            CloseAllWindows();
+        }
+
+        private void Canvas_MouseEnter(object sender, MouseEventArgs e) 
+        {
+            TopButtonStack.Visibility = Visibility.Visible;
+        }
+
+        private void Canvas_MouseLeave(object sender, MouseEventArgs e) 
+        {
+            TopButtonStack.Visibility = Visibility.Collapsed;
         }
 
         private async void FreezeScreen() 
@@ -103,8 +93,10 @@ namespace WpfAppTest
 
         private void Window_Unloaded(object sender, RoutedEventArgs e)
         {
-            KeyDown -= HandleKeyDown;
+            BG.Source = null;
             TopButtonStack.Visibility = Visibility.Collapsed;
+            CancelButton.Click -= CancelItemClick;
+            KeyDown -= HandleKeyDown;
         }
 
         private void RegionClickCanvas_MouseLeave(object sender, MouseEventArgs e)

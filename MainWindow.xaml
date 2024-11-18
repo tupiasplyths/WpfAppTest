@@ -39,8 +39,8 @@
         </Viewbox>
         <Canvas 
             Name="vancas" 
-            MouseEnter="RegionClickCanvas_MouseEnter"
-            MouseLeave="RegionClickCanvas_MouseLeave"
+            MouseEnter="Canvas_MouseEnter"
+            MouseLeave="Canvas_MouseLeave"
             Cursor="Cross">
             <Canvas.Clip>
                 <CombinedGeometry GeometryCombineMode="Exclude">
@@ -77,6 +77,8 @@
             d:Background="Gray"
             d:Visibility="Visible"
             CornerRadius="8"
+            MouseEnter="Canvas_MouseEnter"
+            MouseLeave="Canvas_MouseLeave"
             Visibility="Collapsed">
             <Border.Effect>
                 <DropShadowEffect
@@ -92,13 +94,17 @@
                 VerticalAlignment="Top"
                 Orientation="Horizontal"
                 >
-                <Button Click="Button_Click" Content="Capture" Width="143"/>
+                <Button
+                    x:Name="CancelButton"
+                    Width="40"
+                    Height="40"
+                    Margin="2,0,0,0"
+                    Click="CancelItemClick"
+                    ToolTip="Cancel">
+                    <wpfui:SymbolIcon Symbol="Dismiss24" />
+                </Button>
             </StackPanel>
         </Border>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="800*"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
     </Grid>
 
     
