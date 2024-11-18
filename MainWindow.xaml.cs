@@ -27,6 +27,18 @@ namespace WpfAppTest
             BG.Opacity = 0.2;
         }
 
+        internal void KeyPressed(Key key, bool? isActive = null) 
+        {
+            switch (key)
+            {
+                case Key.Escape:
+                    CloseAllWindows();
+                    break;
+                default:
+                    break;
+            }
+        }
+
         private void Button_Click(object sender, RoutedEventArgs e)
         {
 
@@ -49,13 +61,27 @@ namespace WpfAppTest
             }
         }
 
+        private void CloseAllWindows()
+        {
+            WindowCollection allWindows = Application.Current.Windows;
+            foreach (Window window in allWindows)
+            {
+                window.Close();
+            }
+
+            GC.Collect();
+        }
+
+        private void HandleKeyDown(object sender, KeyEventArgs e)
+        {
+            KeyPressed(e.Key);
+        }
+
         private async void FreezeScreen() 
         {
             BackgroundBrush.Opacity = 0;
             await Task.Delay(100);
             SetImageToBackground();
-
-
         } 
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e) {
@@ -66,6 +92,8 @@ namespace WpfAppTest
         {   
             WindowState = WindowState.Maximized;
             FullWindow.Rect = new System.Windows.Rect(0, 0, Width, Height);
+            KeyDown += HandleKeyDown;
+
             FreezeScreen();
             if (IsMouseOver)
             {
@@ -75,6 +103,7 @@ namespace WpfAppTest
 
         private void Window_Unloaded(object sender, RoutedEventArgs e)
         {
+            KeyDown -= HandleKeyDown;
             TopButtonStack.Visibility = Visibility.Collapsed;
         }
 
