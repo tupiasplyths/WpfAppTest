@@ -41,6 +41,9 @@
             Name="vancas" 
             MouseEnter="Canvas_MouseEnter"
             MouseLeave="Canvas_MouseLeave"
+            MouseDown="Canvas_MouseDown"
+            MouseMove="Canvas_MouseMove"
+            MouseUp="Canvas_MouseUp"
             Cursor="Cross">
             <Canvas.Clip>
                 <CombinedGeometry GeometryCombineMode="Exclude">
