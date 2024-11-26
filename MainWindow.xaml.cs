@@ -35,7 +35,7 @@ namespace WpfAppTest
             BG.Opacity = 0.6;
         }
 
-        internal void KeyPressed(Key key, bool? isActive = null) 
+        internal void KeyPressed(Key key, bool? isActive = null)
         {
             switch (key)
             {
@@ -68,12 +68,12 @@ namespace WpfAppTest
             CloseAllWindows();
         }
 
-        private void Canvas_MouseEnter(object sender, MouseEventArgs e) 
+        private void Canvas_MouseEnter(object sender, MouseEventArgs e)
         {
             TopButtonStack.Visibility = Visibility.Visible;
         }
 
-        private void Canvas_MouseLeave(object sender, MouseEventArgs e) 
+        private void Canvas_MouseLeave(object sender, MouseEventArgs e)
         {
             TopButtonStack.Visibility = Visibility.Collapsed;
         }
@@ -129,17 +129,12 @@ namespace WpfAppTest
             double xDimension = Canvas.GetLeft(selectBorder) * m.M11;
             double yDimension = Canvas.GetTop(selectBorder) * m.M22;
 
-            Rectangle scaledRegion = new (
+            Rectangle scaledRegion = new(
                 (int)xDimension,
                 (int)yDimension,
                 (int)(selectBorder.Width * m.M11),
                 (int)(selectBorder.Height * m.M22));
 
-            // var visual = new DrawingVisual();
-            // using (DrawingContext context = visual.RenderOpen())
-            // {
-            //     context.DrawRectangle(new VisualBrush(visual), null, new Rect(scaledRegion.X, scaledRegion.Y, scaledRegion.Width, scaledRegion.Height));
-            // }
             Bitmap bmp = ImageMethods.GetRegionOfScreenAsBitmap(scaledRegion);
             string timeStamp = ApplicationUtilities.GetTimestamp(DateTime.Now);
             string outputFileName = $"F:/code/VS_junk/WpfAppTest/output/{timeStamp}.png";
@@ -151,7 +146,7 @@ namespace WpfAppTest
             if (!isSelecting) return;
 
             System.Windows.Point currentPoint = e.GetPosition(this);
-            double left =  Math.Min(clickedPoint.X, currentPoint.X); 
+            double left = Math.Min(clickedPoint.X, currentPoint.X);
             double top = Math.Min(clickedPoint.Y, currentPoint.Y);
 
             selectBorder.Height = Math.Max(clickedPoint.Y, currentPoint.Y) - top;
@@ -167,19 +162,20 @@ namespace WpfAppTest
             Canvas.SetTop(selectBorder, top - 1);
         }
 
-        private async void FreezeScreen() 
+        private async void FreezeScreen()
         {
             BackgroundBrush.Opacity = 0;
             await Task.Delay(100);
             SetImageToBackground();
-        } 
+        }
 
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e) {
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
             TopButtonStack.Visibility = Visibility.Collapsed;
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
-        {   
+        {
             WindowState = WindowState.Maximized;
             FullWindow.Rect = new System.Windows.Rect(0, 0, Width, Height);
             KeyDown += HandleKeyDown;
