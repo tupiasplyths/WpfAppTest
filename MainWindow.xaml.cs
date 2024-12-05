@@ -2,14 +2,11 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using System.Windows.Input;
 using WpfAppTest.Utilities;
 using WpfAppTest.Extensions;
 using System.Drawing;
-// using System.Windows.Forms;
 using System.Drawing.Imaging;
-
 namespace WpfAppTest
 {
     /// <summary>
@@ -32,7 +29,7 @@ namespace WpfAppTest
         {
             BG.Source = null;
             BG.Source = ImageMethods.GetWindowBoundsImage(this);
-            BG.Opacity = 0.6;
+            BG.Opacity = 0.1;
         }
 
         internal void KeyPressed(Key key, bool? isActive = null)
@@ -137,8 +134,12 @@ namespace WpfAppTest
 
             Bitmap bmp = ImageMethods.GetRegionOfScreenAsBitmap(scaledRegion);
             string timeStamp = ApplicationUtilities.GetTimestamp(DateTime.Now);
-            string outputFileName = $"F:/code/VS_junk/WpfAppTest/output/{timeStamp}.png";
+            string cwd = System.IO.Path.GetDirectoryName(System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName);
+            string outputFileName = $"./output/{timeStamp}.png";
             bmp.Save(outputFileName, ImageFormat.Png);
+            string text = MangaOCR.GetTextFromOCR(outputFileName);
+            Console.WriteLine(text);
+            CloseAllWindows();
         }
 
         private void Canvas_MouseMove(object sender, MouseEventArgs e)
