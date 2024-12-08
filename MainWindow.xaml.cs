@@ -18,7 +18,8 @@ namespace WpfAppTest
         private Border selectBorder = new(); // Border for the selection rectangle
         private System.Windows.Point clickedPoint = new();
         private DisplayInfo? CurrentScreen { get; set; }
-
+        private string? OCRText { get; set; }
+        private string? translatedText { get; set; }
         private MangaOCR OCR = new();
 
         public MainWindow()
@@ -140,8 +141,11 @@ namespace WpfAppTest
             string outputFileName = $"./output/{timeStamp}.png";
             bmp.Save(outputFileName, ImageFormat.Png);
             string text = OCR.GetTextFromOCR(outputFileName);
-            Console.WriteLine(text);
-            CloseAllWindows();
+            OCRText = text;
+            translatedText = Translate.GetTranslation(text);
+            Console.WriteLine(text + "\n" + translatedText);
+
+            // CloseAllWindows();
         }
 
         private void Canvas_MouseMove(object sender, MouseEventArgs e)
@@ -197,6 +201,8 @@ namespace WpfAppTest
             TopButtonStack.Visibility = Visibility.Collapsed;
             CancelButton.Click -= CancelItemClick;
             KeyDown -= HandleKeyDown;
+            OCR.CleanUp();
+            GC.Collect();
         }
     }
 }
