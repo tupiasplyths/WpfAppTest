@@ -2,17 +2,40 @@ using Python.Runtime;
 
 namespace WpfAppTest;
 
-public static class MangaOCR
+public class MangaOCR
 {
-    public static string GetTextFromOCR(string image_path)
+    private dynamic? OCR;
+
+    public MangaOCR()
     {
-        Runtime.PythonDLL = "W:/Conda/python311.dll";
-        PythonEngine.PythonHome = "W:/Conda";
+        Initialize();
+    }
+
+    public void Initialize()
+    {
+        // Path to python dll 
+        // NOTE: Anaconda python dll does not work for some reason
+        Runtime.PythonDLL = "C:/Users/Phere/AppData/Local/Programs/Python/Python312/python312.dll";
         PythonEngine.Initialize();
         using (Py.GIL())
         {
-            dynamic manga_ocr = Py.Import("manga_ocr");
-            return manga_ocr.get_text(image_path);
+            dynamic module = Py.Import("manga_ocr");
+            OCR = module.MangaOcr();
         }
+    }
+    public string GetTextFromOCR(string image_path)
+    {
+        using (Py.GIL())
+        {
+            Console.WriteLine("Python Version: " + PythonEngine.Version);
+            string text = OCR(image_path);
+            return text;
+        }
+    }
+
+    public void CleanUp()
+    {
+        // Shutdown the Python engine when done
+        PythonEngine.Shutdown();
     }
 }

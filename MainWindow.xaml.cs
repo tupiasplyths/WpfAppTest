@@ -19,6 +19,8 @@ namespace WpfAppTest
         private System.Windows.Point clickedPoint = new();
         private DisplayInfo? CurrentScreen { get; set; }
 
+        private MangaOCR OCR = new();
+
         public MainWindow()
         {
             InitializeComponent();
@@ -134,10 +136,10 @@ namespace WpfAppTest
 
             Bitmap bmp = ImageMethods.GetRegionOfScreenAsBitmap(scaledRegion);
             string timeStamp = ApplicationUtilities.GetTimestamp(DateTime.Now);
-            string cwd = System.IO.Path.GetDirectoryName(System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName);
+            // string cwd = System.IO.Path.GetDirectoryName(System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName);
             string outputFileName = $"./output/{timeStamp}.png";
             bmp.Save(outputFileName, ImageFormat.Png);
-            string text = MangaOCR.GetTextFromOCR(outputFileName);
+            string text = OCR.GetTextFromOCR(outputFileName);
             Console.WriteLine(text);
             CloseAllWindows();
         }
@@ -180,6 +182,7 @@ namespace WpfAppTest
             WindowState = WindowState.Maximized;
             FullWindow.Rect = new System.Windows.Rect(0, 0, Width, Height);
             KeyDown += HandleKeyDown;
+
 
             FreezeScreen();
             if (IsMouseOver)

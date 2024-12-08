@@ -8,10 +8,8 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Remove="GrabScreenshot.xaml.cs"/>
   </ItemGroup>
   <ItemGroup>
-    <Page Remove="GrabScreenshot.xaml"/>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="WPF-UI" Version="3.0.5"/>
