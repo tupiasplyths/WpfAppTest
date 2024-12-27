@@ -13,6 +13,8 @@
     AllowsTransparency="True"
     WindowStyle="None"
     Closing="Window_Closing"
+    Deactivated="Window_Deactivated"
+    Activated="Window_Activated"
     Loaded="Window_Loaded"
     Unloaded="Window_Unloaded"
     mc:Ignorable="d"
@@ -39,8 +41,11 @@
         </Viewbox>
         <Canvas 
             Name="vancas" 
-            MouseEnter="RegionClickCanvas_MouseEnter"
-            MouseLeave="RegionClickCanvas_MouseLeave"
+            MouseEnter="Canvas_MouseEnter"
+            MouseLeave="Canvas_MouseLeave"
+            MouseDown="Canvas_MouseDown"
+            MouseMove="Canvas_MouseMove"
+            MouseUp="Canvas_MouseUp"
             Cursor="Cross">
             <Canvas.Clip>
                 <CombinedGeometry GeometryCombineMode="Exclude">
@@ -67,6 +72,17 @@
                         />
                 </ContextMenu>
             </Canvas.ContextMenu>
+            <TextBlock
+                Name="translatedTextBlock"
+                TextWrapping="Wrap"
+                TextAlignment="Center"
+                VerticalAlignment="Center"
+                FontSize="24">
+                <TextBlock.Background>
+                    <SolidColorBrush Color="AntiqueWhite" Opacity="0.8"/>
+                </TextBlock.Background>
+
+            </TextBlock>
         </Canvas>
         <Border
             x:Name="TopButtonStack"
@@ -77,6 +93,8 @@
             d:Background="Gray"
             d:Visibility="Visible"
             CornerRadius="8"
+            MouseEnter="Canvas_MouseEnter"
+            MouseLeave="Canvas_MouseLeave"
             Visibility="Collapsed">
             <Border.Effect>
                 <DropShadowEffect
@@ -92,13 +110,17 @@
                 VerticalAlignment="Top"
                 Orientation="Horizontal"
                 >
-                <Button Click="Button_Click" Content="Capture" Width="143"/>
+                <Button
+                    x:Name="CancelButton"
+                    Width="40"
+                    Height="40"
+                    Margin="2,0,0,0"
+                    Click="CancelItemClick"
+                    ToolTip="Cancel">
+                    <wpfui:SymbolIcon Symbol="Dismiss24" />
+                </Button>
             </StackPanel>
         </Border>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="800*"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
     </Grid>
 
     

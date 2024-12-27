@@ -1,9 +1,12 @@
-﻿using System.Windows;
+﻿using Dapplo.Windows.User32;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using System.Windows.Input;
-
+using WpfAppTest.Utilities;
+using WpfAppTest.Extensions;
+using System.Drawing;
+using System.Drawing.Imaging;
 namespace WpfAppTest
 {
     /// <summary>
@@ -11,53 +14,36 @@ namespace WpfAppTest
     /// </summary>
     public partial class MainWindow : Window
     {
+        private bool isSelecting = false;
+        private MangaOCR OCR = new(); // Init OCR engine
+        private Border selectBorder = new(); // Border for the selection rectangle
+        private System.Windows.Point clickedPoint = new();
+        private DisplayInfo? CurrentScreen { get; set; }
+        private string? OCRText { get; set; }
+        private string? translatedText { get; set; }
+
         public MainWindow()
         {
             InitializeComponent();
             Grid grid = new Grid();
-            //grid.Children.Add(vancas);
-            //grid.Children.Add(clip);
-            //Content = grid;
         }
 
         public void SetImageToBackground()
         {
             BG.Source = null;
             BG.Source = ImageMethods.GetWindowBoundsImage(this);
-            BG.Opacity = 0.2;
+            BackgroundBrush.Opacity = 0.2;
         }
 
-        internal void KeyPressed(Key key, bool? isActive = null) 
+        internal void KeyPressed(Key key, bool? isActive = null)
         {
             switch (key)
             {
                 case Key.Escape:
-                    CloseAllWindows();
+                    MinimizeWindow();
                     break;
                 default:
                     break;
-            }
-        }
-
-        private void Button_Click(object sender, RoutedEventArgs e)
-        {
-
-            //RenderTargetBitmap renderTargetBitmap = new RenderTargetBitmap((int)width, (int)height, 96, 96, PixelFormats.Pbgra32);
-
-            DrawingVisual drawingVisual = new DrawingVisual();
-            using (DrawingContext drawingContext = drawingVisual.RenderOpen())
-            {
-                VisualBrush visualBrush = new VisualBrush(vancas);
-                // drawingContext.DrawRectangle(visualBrush, null, new Rect(new Point(-left, top), new Point(width - left, height - top)));
-            }
-            //renderTargetBitmap.Render(drawingVisual);
-
-            // Save the image to a file
-            BitmapEncoder encoder = new PngBitmapEncoder();
-            //encoder.Frames.Add(BitmapFrame.Create(renderTargetBitmap));
-            using (var stream = System.IO.File.Create("./output/captured_image.png"))
-            {
-                encoder.Save(stream);
             }
         }
 
@@ -77,24 +63,167 @@ namespace WpfAppTest
             KeyPressed(e.Key);
         }
 
-        private async void FreezeScreen() 
+        private void CancelItemClick(object sender, RoutedEventArgs e)
         {
-            BackgroundBrush.Opacity = 0;
-            await Task.Delay(100);
-            SetImageToBackground();
-        } 
+            CloseAllWindows();
+        }
 
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e) {
+        private void MinimizeWindow()
+        {
+            this.WindowState = WindowState.Minimized;
+        }
+
+        private void Canvas_MouseEnter(object sender, MouseEventArgs e)
+        {
+            TopButtonStack.Visibility = Visibility.Visible;
+        }
+
+        private void Canvas_MouseLeave(object sender, MouseEventArgs e)
+        {
+            TopButtonStack.Visibility = Visibility.Collapsed;
+        }
+
+        /// <summary>
+        /// Handles the MouseDown event on the canvas, initiating a selection process.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The MouseButtonEventArgs instance containing the event data.</param>
+        private void Canvas_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            isSelecting = true;
+            TopButtonStack.Visibility = Visibility.Collapsed;
+            vancas.CaptureMouse();
+            CursorClipper.ClipCursor(this);
+            clickedPoint = e.GetPosition(this);
+            selectBorder.Height = 2;
+            selectBorder.Width = 2;
+            translatedTextBlock.Text = "";
+
+            try { vancas.Children.Remove(selectBorder); } catch (Exception) { }
+            selectBorder.BorderThickness = new Thickness(2);
+            System.Windows.Media.Color borderColor = System.Windows.Media.Color.FromArgb(255, 40, 118, 126);
+            selectBorder.BorderBrush = new SolidColorBrush(borderColor);
+            _ = vancas.Children.Add(selectBorder);
+            Canvas.SetLeft(selectBorder, clickedPoint.X);
+            Canvas.SetTop(selectBorder, clickedPoint.Y);
+
+            ApplicationUtilities.GetMousePosition(out System.Windows.Point mousePoint);
+            foreach (DisplayInfo? screen in DisplayInfo.AllDisplayInfos)
+            {
+                Rect bound = screen.ScaledBounds();
+                if (bound.Contains(mousePoint)) CurrentScreen = screen;
+            }
+        }
+
+        private void Canvas_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            if (!isSelecting) return;
+
+            isSelecting = false;
+            CurrentScreen = null;
+            CursorClipper.UnClipCursor();
+            vancas.ReleaseMouseCapture();
+            clippingGeometry.Rect = new Rect(new System.Windows.Point(0, 0), new System.Windows.Size(0, 0));
+
+            System.Windows.Point currentPoint = e.GetPosition(this);
+            Matrix m = PresentationSource.FromVisual(this).CompositionTarget.TransformToDevice;
+            currentPoint.X *= m.M11;
+            currentPoint.Y *= m.M22;
+
+            currentPoint.X = Math.Round(currentPoint.X);
+            currentPoint.Y = Math.Round(currentPoint.Y);
+
+            double xDimension = Canvas.GetLeft(selectBorder) * m.M11;
+            double yDimension = Canvas.GetTop(selectBorder) * m.M22;
+
+            Rectangle scaledRegion = new(
+                (int)xDimension,
+                (int)yDimension,
+                (int)(selectBorder.Width * m.M11),
+                (int)(selectBorder.Height * m.M22));
+
+            Bitmap bmp = ImageMethods.GetRegionOfScreenAsBitmap(scaledRegion);
+            string timeStamp = ApplicationUtilities.GetTimestamp(DateTime.Now);
+            // string cwd = System.IO.Path.GetDirectoryName(System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName);
+            string outputFileName = $"./output/{timeStamp}.png";
+            bmp.Save(outputFileName, ImageFormat.Png);
+            string text = OCR.GetTextFromOCR(outputFileName);
+            OCRText = text;
+            translatedText = Translate.GetTranslation(text);
+            Console.WriteLine(text + "\n" + translatedText);
+
+            // translatedTextBlock.Text = translatedText;
+            UpdateTextBlock(translatedText, scaledRegion, xDimension, yDimension);
+            // CloseAllWindows();
+        }
+
+        private void UpdateTextBlock(string translateText, Rectangle region, double xDimension = 0, double yDimension = 0)
+        {
+            translatedTextBlock.Text = translateText;
+            translatedTextBlock.Width = region.Width;
+            translatedTextBlock.Height = region.Height;
+
+            Canvas.SetLeft(translatedTextBlock, xDimension);
+            Canvas.SetTop(translatedTextBlock, yDimension);
+            translatedTextBlock.VerticalAlignment = VerticalAlignment.Center;
+        }
+
+        private void Canvas_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (!isSelecting) return;
+
+            System.Windows.Point currentPoint = e.GetPosition(this);
+            double left = Math.Min(clickedPoint.X, currentPoint.X);
+            double top = Math.Min(clickedPoint.Y, currentPoint.Y);
+
+            selectBorder.Height = Math.Max(clickedPoint.Y, currentPoint.Y) - top;
+            selectBorder.Width = Math.Max(clickedPoint.X, currentPoint.X) - left;
+            selectBorder.Height += 2;
+            selectBorder.Width += 2;
+
+            clippingGeometry.Rect = new Rect(
+                new System.Windows.Point(left, top),
+                new System.Windows.Size(selectBorder.Width - 2, selectBorder.Height - 2));
+
+            Canvas.SetLeft(selectBorder, left - 1);
+            Canvas.SetTop(selectBorder, top - 1);
+        }
+
+        private async void FreezeScreen()
+        {
+            await Task.Delay(200);
+            BackgroundBrush.Opacity = 0;
+            SetImageToBackground();
+        }
+
+        private void Unfreeze()
+        {
+            BackgroundBrush.Opacity = 1;
+            BG.Source = null;
+        }
+
+        private void Window_Deactivated(object sender, EventArgs e)
+        {
+            Unfreeze();
+            translatedTextBlock.Text = "";
+        }
+
+        private void Window_Activated(object sender, EventArgs e)
+        {
+            FreezeScreen();
+        }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
             TopButtonStack.Visibility = Visibility.Collapsed;
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
-        {   
+        {
             WindowState = WindowState.Maximized;
             FullWindow.Rect = new System.Windows.Rect(0, 0, Width, Height);
             KeyDown += HandleKeyDown;
 
-            FreezeScreen();
             if (IsMouseOver)
             {
                 TopButtonStack.Visibility = Visibility.Visible;
@@ -103,19 +232,12 @@ namespace WpfAppTest
 
         private void Window_Unloaded(object sender, RoutedEventArgs e)
         {
+            BG.Source = null;
+            TopButtonStack.Visibility = Visibility.Collapsed;
+            CancelButton.Click -= CancelItemClick;
             KeyDown -= HandleKeyDown;
-            TopButtonStack.Visibility = Visibility.Collapsed;
+            // OCR.CleanUp();
+            GC.Collect();
         }
-
-        private void RegionClickCanvas_MouseLeave(object sender, MouseEventArgs e)
-        {
-            TopButtonStack.Visibility = Visibility.Collapsed;
-        }
-
-        private void RegionClickCanvas_MouseEnter(object sender, MouseEventArgs e)
-        {
-            TopButtonStack.Visibility = Visibility.Visible;
-        }
-
     }
 }

@@ -8,13 +8,13 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Remove="GrabScreenshot.xaml.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Page Remove="GrabScreenshot.xaml" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="DotNetEnv" Version="3.1.1" />
     <PackageReference Include="WPF-UI" Version="3.0.5" />
     <PackageReference Include="Dapplo.Windows.User32" Version="1.0.28" />
+    <PackageReference Include="pythonnet" Version="3.1.0-preview2024-09-06" />
   </ItemGroup>
 </Project>

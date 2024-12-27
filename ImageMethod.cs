@@ -1,11 +1,9 @@
-using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-// using Windows.Storage.Streams;
 using BitmapEncoder = System.Windows.Media.Imaging.BitmapEncoder;
 using BitmapFrame = System.Windows.Media.Imaging.BitmapFrame;
 using Point = System.Windows.Point;
