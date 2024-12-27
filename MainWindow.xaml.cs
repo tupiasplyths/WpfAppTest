@@ -15,12 +15,12 @@ namespace WpfAppTest
     public partial class MainWindow : Window
     {
         private bool isSelecting = false;
+        private MangaOCR OCR = new(); // Init OCR engine
         private Border selectBorder = new(); // Border for the selection rectangle
         private System.Windows.Point clickedPoint = new();
         private DisplayInfo? CurrentScreen { get; set; }
         private string? OCRText { get; set; }
         private string? translatedText { get; set; }
-        private MangaOCR OCR = new();
 
         public MainWindow()
         {
@@ -32,7 +32,7 @@ namespace WpfAppTest
         {
             BG.Source = null;
             BG.Source = ImageMethods.GetWindowBoundsImage(this);
-            BG.Opacity = 0.04;
+            BackgroundBrush.Opacity = 0.2;
         }
 
         internal void KeyPressed(Key key, bool? isActive = null)
@@ -40,7 +40,7 @@ namespace WpfAppTest
             switch (key)
             {
                 case Key.Escape:
-                    CloseAllWindows();
+                    MinimizeWindow();
                     break;
                 default:
                     break;
@@ -66,6 +66,11 @@ namespace WpfAppTest
         private void CancelItemClick(object sender, RoutedEventArgs e)
         {
             CloseAllWindows();
+        }
+
+        private void MinimizeWindow()
+        {
+            this.WindowState = WindowState.Minimized;
         }
 
         private void Canvas_MouseEnter(object sender, MouseEventArgs e)
@@ -97,6 +102,7 @@ namespace WpfAppTest
             try { vancas.Children.Remove(selectBorder); } catch (Exception) { }
             selectBorder.BorderThickness = new Thickness(2);
             System.Windows.Media.Color borderColor = System.Windows.Media.Color.FromArgb(255, 40, 118, 126);
+            selectBorder.BorderBrush = new SolidColorBrush(borderColor);
             _ = vancas.Children.Add(selectBorder);
             Canvas.SetLeft(selectBorder, clickedPoint.X);
             Canvas.SetTop(selectBorder, clickedPoint.Y);
@@ -185,8 +191,8 @@ namespace WpfAppTest
 
         private async void FreezeScreen()
         {
+            await Task.Delay(200);
             BackgroundBrush.Opacity = 0;
-            await Task.Delay(100);
             SetImageToBackground();
         }
 
@@ -199,6 +205,7 @@ namespace WpfAppTest
         private void Window_Deactivated(object sender, EventArgs e)
         {
             Unfreeze();
+            translatedTextBlock.Text = "";
         }
 
         private void Window_Activated(object sender, EventArgs e)
