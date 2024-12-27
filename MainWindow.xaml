@@ -13,6 +13,8 @@
     AllowsTransparency="True"
     WindowStyle="None"
     Closing="Window_Closing"
+    Deactivated="Window_Deactivated"
+    Activated="Window_Activated"
     Loaded="Window_Loaded"
     Unloaded="Window_Unloaded"
     mc:Ignorable="d"
@@ -70,6 +72,17 @@
                         />
                 </ContextMenu>
             </Canvas.ContextMenu>
+            <TextBlock
+                Name="translatedTextBlock"
+                TextWrapping="Wrap"
+                TextAlignment="Center"
+                VerticalAlignment="Center"
+                FontSize="24">
+                <TextBlock.Background>
+                    <SolidColorBrush Color="AntiqueWhite" Opacity="0.8"/>
+                </TextBlock.Background>
+
+            </TextBlock>
         </Canvas>
         <Border
             x:Name="TopButtonStack"

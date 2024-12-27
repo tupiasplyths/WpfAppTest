@@ -32,7 +32,7 @@ namespace WpfAppTest
         {
             BG.Source = null;
             BG.Source = ImageMethods.GetWindowBoundsImage(this);
-            BG.Opacity = 0.1;
+            BG.Opacity = 0.04;
         }
 
         internal void KeyPressed(Key key, bool? isActive = null)
@@ -92,6 +92,7 @@ namespace WpfAppTest
             clickedPoint = e.GetPosition(this);
             selectBorder.Height = 2;
             selectBorder.Width = 2;
+            translatedTextBlock.Text = "";
 
             try { vancas.Children.Remove(selectBorder); } catch (Exception) { }
             selectBorder.BorderThickness = new Thickness(2);
@@ -145,7 +146,20 @@ namespace WpfAppTest
             translatedText = Translate.GetTranslation(text);
             Console.WriteLine(text + "\n" + translatedText);
 
+            // translatedTextBlock.Text = translatedText;
+            UpdateTextBlock(translatedText, scaledRegion, xDimension, yDimension);
             // CloseAllWindows();
+        }
+
+        private void UpdateTextBlock(string translateText, Rectangle region, double xDimension = 0, double yDimension = 0)
+        {
+            translatedTextBlock.Text = translateText;
+            translatedTextBlock.Width = region.Width;
+            translatedTextBlock.Height = region.Height;
+
+            Canvas.SetLeft(translatedTextBlock, xDimension);
+            Canvas.SetTop(translatedTextBlock, yDimension);
+            translatedTextBlock.VerticalAlignment = VerticalAlignment.Center;
         }
 
         private void Canvas_MouseMove(object sender, MouseEventArgs e)
@@ -176,6 +190,22 @@ namespace WpfAppTest
             SetImageToBackground();
         }
 
+        private void Unfreeze()
+        {
+            BackgroundBrush.Opacity = 1;
+            BG.Source = null;
+        }
+
+        private void Window_Deactivated(object sender, EventArgs e)
+        {
+            Unfreeze();
+        }
+
+        private void Window_Activated(object sender, EventArgs e)
+        {
+            FreezeScreen();
+        }
+
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             TopButtonStack.Visibility = Visibility.Collapsed;
@@ -187,8 +217,6 @@ namespace WpfAppTest
             FullWindow.Rect = new System.Windows.Rect(0, 0, Width, Height);
             KeyDown += HandleKeyDown;
 
-
-            FreezeScreen();
             if (IsMouseOver)
             {
                 TopButtonStack.Visibility = Visibility.Visible;
@@ -201,7 +229,7 @@ namespace WpfAppTest
             TopButtonStack.Visibility = Visibility.Collapsed;
             CancelButton.Click -= CancelItemClick;
             KeyDown -= HandleKeyDown;
-            OCR.CleanUp();
+            // OCR.CleanUp();
             GC.Collect();
         }
     }

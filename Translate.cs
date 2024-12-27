@@ -26,17 +26,7 @@ public static class Translate
         var translatedText = jsonDocument.RootElement.GetProperty("data")
                             .GetProperty("translations")[0]
                             .GetProperty("translatedText")
-                            .GetString();
+                            .GetString() ?? "Translation Failed";
         return translatedText;
     }
 }
-
-// public class JsonData
-// {
-//     public Translations? data { get; set; }
-// }
-
-// public class Translations
-// {
-//     public string? translatedText { get; set; }
-// }
