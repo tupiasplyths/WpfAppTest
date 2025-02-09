@@ -65,12 +65,14 @@ namespace WpfAppTest
 
         private void CancelItemClick(object sender, RoutedEventArgs e)
         {
-            CloseAllWindows();
+            // CloseAllWindows();
+            Quit();
+            return;
         }
 
         private void MinimizeWindow()
         {
-            this.WindowState = WindowState.Minimized;
+            WindowState = WindowState.Minimized;
         }
 
         private void Canvas_MouseEnter(object sender, MouseEventArgs e)
@@ -145,6 +147,12 @@ namespace WpfAppTest
             Bitmap bmp = ImageMethods.GetRegionOfScreenAsBitmap(scaledRegion);
             string timeStamp = ApplicationUtilities.GetTimestamp(DateTime.Now);
             // string cwd = System.IO.Path.GetDirectoryName(System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName);
+            bool isSmallArea = scaledRegion.Width < 5 && scaledRegion.Height < 5;
+            if (isSmallArea)
+            {
+                BackgroundBrush.Opacity = 0;
+                return;
+            }
             string outputFileName = $"./output/{timeStamp}.png";
             bmp.Save(outputFileName, ImageFormat.Png);
             string text = OCR.GetTextFromOCR(outputFileName);
@@ -155,17 +163,6 @@ namespace WpfAppTest
             // translatedTextBlock.Text = translatedText;
             UpdateTextBlock(translatedText, scaledRegion, xDimension, yDimension);
             // CloseAllWindows();
-        }
-
-        private void UpdateTextBlock(string translateText, Rectangle region, double xDimension = 0, double yDimension = 0)
-        {
-            translatedTextBlock.Text = translateText;
-            translatedTextBlock.Width = region.Width;
-            translatedTextBlock.Height = region.Height;
-
-            Canvas.SetLeft(translatedTextBlock, xDimension);
-            Canvas.SetTop(translatedTextBlock, yDimension);
-            translatedTextBlock.VerticalAlignment = VerticalAlignment.Center;
         }
 
         private void Canvas_MouseMove(object sender, MouseEventArgs e)
@@ -189,28 +186,47 @@ namespace WpfAppTest
             Canvas.SetTop(selectBorder, top - 1);
         }
 
+        private void UpdateTextBlock(string translateText, Rectangle region, double xDimension = 0, double yDimension = 0)
+        {
+            translatedTextBlock.Text = translateText;
+            translatedTextBlock.Width = region.Width;
+            translatedTextBlock.Height = region.Height;
+
+            Canvas.SetLeft(translatedTextBlock, xDimension);
+            Canvas.SetTop(translatedTextBlock, yDimension);
+            translatedTextBlock.VerticalAlignment = VerticalAlignment.Center;
+        }
+
         private async void FreezeScreen()
         {
-            await Task.Delay(200);
             BackgroundBrush.Opacity = 0;
+            await Task.Delay(150);
             SetImageToBackground();
         }
 
         private void Unfreeze()
         {
-            BackgroundBrush.Opacity = 1;
+            BackgroundBrush.Opacity = 0;
             BG.Source = null;
         }
 
         private void Window_Deactivated(object sender, EventArgs e)
         {
             Unfreeze();
-            translatedTextBlock.Text = "";
+            UpdateTextBlock("", new Rectangle(0, 0, 0, 0), 0, 0);
+            selectBorder.BorderThickness = new Thickness(0);
         }
 
         private void Window_Activated(object sender, EventArgs e)
         {
             FreezeScreen();
+        }
+
+        private void Quit()
+        {
+            GC.Collect();
+            OCR.CleanUp();
+            Application.Current.Shutdown();
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -221,8 +237,9 @@ namespace WpfAppTest
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             WindowState = WindowState.Maximized;
-            FullWindow.Rect = new System.Windows.Rect(0, 0, Width, Height);
+            FullWindow.Rect = new Rect(0, 0, Width, Height);
             KeyDown += HandleKeyDown;
+            SetImageToBackground();
 
             if (IsMouseOver)
             {
@@ -233,9 +250,19 @@ namespace WpfAppTest
         private void Window_Unloaded(object sender, RoutedEventArgs e)
         {
             BG.Source = null;
+            BG.UpdateLayout();
+            CurrentScreen = null;
+            Loaded -= Window_Loaded;
+            Unloaded -= Window_Unloaded;
+            KeyDown -= HandleKeyDown;
             TopButtonStack.Visibility = Visibility.Collapsed;
             CancelButton.Click -= CancelItemClick;
-            KeyDown -= HandleKeyDown;
+            vancas.MouseDown -= Canvas_MouseDown;
+            vancas.MouseUp -= Canvas_MouseUp;
+            vancas.MouseMove -= Canvas_MouseMove;
+            vancas.MouseEnter -= Canvas_MouseEnter;
+            vancas.MouseLeave -= Canvas_MouseLeave;
+
             // OCR.CleanUp();
             GC.Collect();
         }

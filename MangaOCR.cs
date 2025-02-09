@@ -19,6 +19,7 @@ public class MangaOCR
         PythonEngine.Initialize();
         using (Py.GIL())
         {
+            Console.WriteLine("Python initialized");
             dynamic module = Py.Import("manga_ocr");
             OCR = module.MangaOcr();
         }
@@ -27,7 +28,6 @@ public class MangaOCR
     {
         using (Py.GIL())
         {
-            Console.WriteLine("Python Version: " + PythonEngine.Version);
             string text = OCR(image_path);
             return text;
         }
