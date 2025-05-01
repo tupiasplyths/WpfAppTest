@@ -5,6 +5,7 @@ namespace WpfAppTest;
 public class MangaOCR
 {
     private dynamic? OCR;
+    private dynamic? customOCR;
 
     public MangaOCR()
     {
@@ -20,8 +21,15 @@ public class MangaOCR
         using (Py.GIL())
         {
             Console.WriteLine("Python initialized");
-            dynamic module = Py.Import("manga_ocr");
-            OCR = module.MangaOcr();
+            dynamic os = Py.Import("os");
+            dynamic sys = Py.Import("sys");
+            sys.path.append(os.getcwd());
+            Console.WriteLine(sys.path);
+            // dynamic module = Py.Import("manga_ocr");
+            dynamic custom_ocr = Py.Import("custom_ocr");
+            // OCR = module.MangaOcr();
+            customOCR = custom_ocr.CustomOCR();
+
         }
     }
     public string GetTextFromOCR(string image_path)
@@ -30,6 +38,14 @@ public class MangaOCR
         {
             string text = OCR(image_path);
             return text;
+        }
+    }
+
+    public string GetTextFromCustomOCR(string image_path)
+    {
+        using (Py.GIL())
+        {
+            return customOCR(image_path);
         }
     }
 

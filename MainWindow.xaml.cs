@@ -155,7 +155,8 @@ namespace WpfAppTest
             }
             string outputFileName = $"./output/{timeStamp}.png";
             bmp.Save(outputFileName, ImageFormat.Png);
-            string text = OCR.GetTextFromOCR(outputFileName);
+            // string text = OCR.GetTextFromOCR(outputFileName);
+            string text =  OCR.GetTextFromCustomOCR(outputFileName);
             OCRText = text;
             translatedText = Translate.GetTranslation(text);
             Console.WriteLine(text + "\n" + translatedText);

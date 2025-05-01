@@ -5,7 +5,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:local="clr-namespace:WpfAppTest"
     xmlns:wpfui="http://schemas.lepo.co/wpfui/2022/xaml"
-    Title="MainWindow" 
+    Title="J2E OCR Translator" 
     Height="450" Width="800"
     Topmost="False"
     ResizeMode="NoResize"
