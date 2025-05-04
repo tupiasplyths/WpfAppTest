@@ -1,4 +1,6 @@
 {
     "window.zoomLevel": -1,
-    "editor.fontSize": 12.5
+    "editor.fontSize": 12.5,
+    "editor.defaultFormatter": "ms-dotnettools.csharp",
+    "editor.formatOnPaste": true
 }

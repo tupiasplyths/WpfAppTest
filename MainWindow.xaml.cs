@@ -15,17 +15,20 @@ namespace WpfAppTest
     public partial class MainWindow : Window
     {
         private bool isSelecting = false;
-        private MangaOCR OCR = new(); // Init OCR engine
+        private readonly MangaOCR OCR = new(); // Init OCR engine
         private Border selectBorder = new(); // Border for the selection rectangle
         private System.Windows.Point clickedPoint = new();
         private DisplayInfo? CurrentScreen { get; set; }
         private string? OCRText { get; set; }
-        private string? translatedText { get; set; }
+        private string? TranslatedText { get; set; }
+        private TextBox? editTextBox ;
+        private bool isEditing = false;
+        private bool useCustomOCR = false; // Track which OCR model to use
 
         public MainWindow()
         {
             InitializeComponent();
-            Grid grid = new Grid();
+            Grid grid = new();
         }
 
         public void SetImageToBackground()
@@ -155,14 +158,13 @@ namespace WpfAppTest
             }
             string outputFileName = $"./output/{timeStamp}.png";
             bmp.Save(outputFileName, ImageFormat.Png);
-            // string text = OCR.GetTextFromOCR(outputFileName);
-            string text =  OCR.GetTextFromCustomOCR(outputFileName);
+            string text = useCustomOCR ? OCR.GetTextFromCustomOCR(outputFileName) : OCR.GetTextFromOCR(outputFileName);
             OCRText = text;
-            translatedText = Translate.GetTranslation(text);
-            Console.WriteLine(text + "\n" + translatedText);
+            TranslatedText = Translate.GetTranslation(text);
+            Console.WriteLine(text + "\n" + TranslatedText);
 
             // translatedTextBlock.Text = translatedText;
-            UpdateTextBlock(translatedText, scaledRegion, xDimension, yDimension);
+            UpdateTextBlock(TranslatedText, scaledRegion, xDimension, yDimension);
             // CloseAllWindows();
         }
 
@@ -198,6 +200,76 @@ namespace WpfAppTest
             translatedTextBlock.VerticalAlignment = VerticalAlignment.Center;
         }
 
+        private void EditTextBox_LostFocus(object sender, RoutedEventArgs e)
+        {
+            FinishEditing();
+        }
+
+        private void TranslatedTextBlock_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ClickCount == 2 && !isEditing)
+            {
+                isEditing = true;
+                // UpdateTextBlock("", new Rectangle(0, 0, 0, 0), 0, 0);
+
+                editTextBox = new TextBox
+                {
+                    Text = OCRText,
+                    Width = translatedTextBlock.Width,
+                    Height = translatedTextBlock.Height,
+                    TextAlignment = TextAlignment.Left,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    FontSize = translatedTextBlock.FontSize,
+                    Background = translatedTextBlock.Background,
+                };
+
+                Canvas.SetLeft(editTextBox, Canvas.GetLeft(translatedTextBlock));
+                Canvas.SetTop(editTextBox, Canvas.GetTop(translatedTextBlock));
+
+                vancas.Children.Add(editTextBox);
+                editTextBox.Focus();
+                editTextBox.SelectAll();
+                editTextBox.LostFocus += EditTextBox_LostFocus;
+                editTextBox.KeyDown += EditTextBox_KeyDown;
+            }
+        }
+
+        private void EditTextBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                FinishEditing();
+            }
+            else if (e.Key == Key.Escape)
+            {
+                CancelEditing();
+            }
+        }
+
+        private void FinishEditing()
+        {
+            if (!isEditing) return;
+
+            if (editTextBox?.Text == null) return;
+            TranslatedText = Translate.GetTranslation(editTextBox.Text);
+            translatedTextBlock.Text = TranslatedText;
+
+            translatedTextBlock.Visibility = Visibility.Visible;
+            vancas.Children.Remove(editTextBox);
+            editTextBox = null;
+            isEditing = false;
+        }
+
+        private void CancelEditing()
+        {
+            if (!isEditing) return;
+
+            translatedTextBlock.Visibility = Visibility.Visible;
+            vancas.Children.Remove(editTextBox);
+            editTextBox = null;
+            isEditing = false;
+        }
+
         private async void FreezeScreen()
         {
             BackgroundBrush.Opacity = 0;
@@ -226,7 +298,7 @@ namespace WpfAppTest
         private void Quit()
         {
             GC.Collect();
-            OCR.CleanUp();
+            MangaOCR.CleanUp();
             Application.Current.Shutdown();
         }
 
@@ -241,6 +313,7 @@ namespace WpfAppTest
             FullWindow.Rect = new Rect(0, 0, Width, Height);
             KeyDown += HandleKeyDown;
             SetImageToBackground();
+            ModelToggleButton.ToolTip = "Using Manga OCR (Click to switch to Custom OCR)";
 
             if (IsMouseOver)
             {
@@ -264,8 +337,26 @@ namespace WpfAppTest
             vancas.MouseEnter -= Canvas_MouseEnter;
             vancas.MouseLeave -= Canvas_MouseLeave;
 
+            if (editTextBox != null)
+            {
+                editTextBox.LostFocus -= EditTextBox_LostFocus;
+                editTextBox.KeyDown -= EditTextBox_KeyDown;
+            }
+
             // OCR.CleanUp();
             GC.Collect();
+        }
+
+        private void ModelToggleButton_Checked(object sender, RoutedEventArgs e)
+        {
+            useCustomOCR = true;
+            ModelToggleButton.ToolTip = "Using Custom OCR (Click to switch to Manga OCR)";
+        }
+
+        private void ModelToggleButton_Unchecked(object sender, RoutedEventArgs e)
+        {
+            useCustomOCR = false;
+            ModelToggleButton.ToolTip = "Using Manga OCR (Click to switch to Custom OCR)";
         }
     }
 }

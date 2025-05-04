@@ -25,9 +25,9 @@ public class MangaOCR
             dynamic sys = Py.Import("sys");
             sys.path.append(os.getcwd());
             Console.WriteLine(sys.path);
-            // dynamic module = Py.Import("manga_ocr");
+            dynamic manga_ocr = Py.Import("manga_ocr");
             dynamic custom_ocr = Py.Import("custom_ocr");
-            // OCR = module.MangaOcr();
+            OCR = manga_ocr.MangaOcr();
             customOCR = custom_ocr.CustomOCR();
 
         }
@@ -49,7 +49,7 @@ public class MangaOCR
         }
     }
 
-    public void CleanUp()
+    public static void CleanUp()
     {
         // Shutdown the Python engine when done
         PythonEngine.Shutdown();
