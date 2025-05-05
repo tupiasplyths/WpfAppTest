@@ -37,6 +37,7 @@ public class MangaOCR
         using (Py.GIL())
         {
             string text = OCR(image_path);
+            Console.WriteLine("Got text from OCR");
             return text;
         }
     }

@@ -77,14 +77,33 @@
                 TextWrapping="Wrap"
                 TextAlignment="Center"
                 VerticalAlignment="Center"
-                MouseDown="TranslatedTextBlock_MouseDown"
                 Cursor = "Hand"
                 FontSize="24">
                 <TextBlock.Background>
                     <SolidColorBrush Color="AntiqueWhite" Opacity="0.8"/>
                 </TextBlock.Background>
-
+                <TextBlock.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="Edit" Click="EditMenuItem_Click" />
+                    </ContextMenu>
+                </TextBlock.ContextMenu>
             </TextBlock>
+            <Button
+                x:Name="FinishEditButton"
+                Visibility="Collapsed"
+                Click="FinishEditButton_Click"
+                Padding="5"
+                Cursor="Hand"
+                ToolTip="Finish Editing">
+                <wpfui:SymbolIcon Symbol="CheckboxChecked24" />
+                <Button.Effect>
+                    <DropShadowEffect
+                        BlurRadius="16"
+                        Direction="-90"
+                        Opacity="0.8"/>
+                </Button.Effect>
+            </Button>
+            
         </Canvas>
         <Border
             x:Name="TopButtonStack"
@@ -130,6 +149,7 @@
                 </Button>
             </StackPanel>
         </Border>
+        
     </Grid>
 
     

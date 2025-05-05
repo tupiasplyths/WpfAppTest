@@ -95,6 +95,8 @@ namespace WpfAppTest
         /// <param name="e">The MouseButtonEventArgs instance containing the event data.</param>
         private void Canvas_MouseDown(object sender, MouseButtonEventArgs e)
         {
+            if (e.LeftButton != MouseButtonState.Pressed) return;
+
             isSelecting = true;
             TopButtonStack.Visibility = Visibility.Collapsed;
             vancas.CaptureMouse();
@@ -224,7 +226,8 @@ namespace WpfAppTest
                 };
 
                 Canvas.SetLeft(editTextBox, Canvas.GetLeft(translatedTextBlock));
-                Canvas.SetTop(editTextBox, Canvas.GetTop(translatedTextBlock));
+                Canvas.SetTop(editTextBox, Canvas.GetTop(translatedTextBlock) - editTextBox.Height - 5);
+
 
                 vancas.Children.Add(editTextBox);
                 editTextBox.Focus();
@@ -232,17 +235,66 @@ namespace WpfAppTest
                 editTextBox.LostFocus += EditTextBox_LostFocus;
                 editTextBox.KeyDown += EditTextBox_KeyDown;
             }
+            e.Handled = true;
+        }
+
+        private void EditMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            if (!isEditing)
+            {
+                isEditing = true;
+
+                editTextBox = new TextBox
+                {
+                    Text = OCRText, // Use original OCR text for editing
+                    Width = translatedTextBlock.ActualHeight, // Use ActualWidth for better sizing
+                    Height = translatedTextBlock.ActualWidth, // Use ActualHeight
+                    TextAlignment = TextAlignment.Left,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    FontSize = translatedTextBlock.FontSize,
+                    Background = translatedTextBlock.Background,
+                    TextWrapping = TextWrapping.Wrap, // Ensure wrapping matches
+                    AcceptsReturn = true // Allow multi-line editing if needed
+                };
+                Canvas.SetLeft(editTextBox, Canvas.GetLeft(translatedTextBlock) - translatedTextBlock.Width/3);
+                Canvas.SetTop(editTextBox, Canvas.GetTop(translatedTextBlock) - editTextBox.Height - 5);
+
+                double editLeft = Canvas.GetLeft(translatedTextBlock);
+                double editTop = Canvas.GetTop(translatedTextBlock);
+
+
+                // Hide the TextBlock and add the TextBox
+                translatedTextBlock.Visibility = Visibility.Collapsed;
+                vancas.Children.Add(editTextBox);
+                editTextBox.Focus();
+                editTextBox.SelectAll();
+                editTextBox.LostFocus += EditTextBox_LostFocus;
+                editTextBox.KeyDown += EditTextBox_KeyDown;
+                // Show and position the Finish Edit Button
+                FinishEditButton.Visibility = Visibility.Visible;
+                // Position button below the textbox
+                Canvas.SetLeft(FinishEditButton, editLeft + editTextBox.Width);
+                Canvas.SetTop(FinishEditButton, editTop + editTextBox.Height/3);
+            }
+        }
+
+        private void FinishEditButton_Click(object sender, RoutedEventArgs e)
+        {
+            Console.WriteLine("Finished Editing");
+            FinishEditing();
         }
 
         private void EditTextBox_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key == Key.Enter)
+            if (e.Key == Key.Enter && (Keyboard.Modifiers & ModifierKeys.Shift) != ModifierKeys.Shift)
             {
                 FinishEditing();
+                e.Handled = true;
             }
             else if (e.Key == Key.Escape)
             {
                 CancelEditing();
+                e.Handled = true;
             }
         }
 
@@ -251,6 +303,7 @@ namespace WpfAppTest
             if (!isEditing) return;
 
             if (editTextBox?.Text == null) return;
+            // OCRText = editTextBox.Text;
             TranslatedText = Translate.GetTranslation(editTextBox.Text);
             translatedTextBlock.Text = TranslatedText;
 
@@ -266,6 +319,7 @@ namespace WpfAppTest
 
             translatedTextBlock.Visibility = Visibility.Visible;
             vancas.Children.Remove(editTextBox);
+            FinishEditButton.Visibility = Visibility.Collapsed;
             editTextBox = null;
             isEditing = false;
         }
@@ -293,6 +347,10 @@ namespace WpfAppTest
         private void Window_Activated(object sender, EventArgs e)
         {
             FreezeScreen();
+            if (!isEditing)
+            {
+                FinishEditButton.Visibility = Visibility.Collapsed;
+            }
         }
 
         private void Quit()

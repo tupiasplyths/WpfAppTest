@@ -36,7 +36,7 @@ class CustomOCR:
         x = self.processor.decode(x[0], skip_special_tokens=True)
         x = post_process(x)
         # print(x)
-        # logger.info(f"OCR result: {x}")
+        logger.info(f"OCR result: {x}")
         return x
 
 
