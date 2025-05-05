@@ -21,7 +21,7 @@ namespace WpfAppTest
         private DisplayInfo? CurrentScreen { get; set; }
         private string? OCRText { get; set; }
         private string? TranslatedText { get; set; }
-        private TextBox? editTextBox ;
+        private TextBox? editTextBox;
         private bool isEditing = false;
         private bool useCustomOCR = false; // Track which OCR model to use
 
@@ -162,11 +162,21 @@ namespace WpfAppTest
             bmp.Save(outputFileName, ImageFormat.Png);
             string text = useCustomOCR ? OCR.GetTextFromCustomOCR(outputFileName) : OCR.GetTextFromOCR(outputFileName);
             OCRText = text;
-            TranslatedText = Translate.GetTranslation(text);
+            try
+            {
+                TranslatedText = Translate.DeepLTranslate(text);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
             Console.WriteLine(text + "\n" + TranslatedText);
 
             // translatedTextBlock.Text = translatedText;
-            UpdateTextBlock(TranslatedText, scaledRegion, xDimension, yDimension);
+            if (TranslatedText != null)
+            {
+                UpdateTextBlock(TranslatedText, scaledRegion, xDimension, yDimension);
+            }
             // CloseAllWindows();
         }
 
@@ -256,7 +266,7 @@ namespace WpfAppTest
                     TextWrapping = TextWrapping.Wrap, // Ensure wrapping matches
                     AcceptsReturn = true // Allow multi-line editing if needed
                 };
-                Canvas.SetLeft(editTextBox, Canvas.GetLeft(translatedTextBlock) - translatedTextBlock.Width/3);
+                Canvas.SetLeft(editTextBox, Canvas.GetLeft(translatedTextBlock) - translatedTextBlock.Width / 3);
                 Canvas.SetTop(editTextBox, Canvas.GetTop(translatedTextBlock) - editTextBox.Height - 5);
 
                 double editLeft = Canvas.GetLeft(translatedTextBlock);
@@ -274,7 +284,7 @@ namespace WpfAppTest
                 FinishEditButton.Visibility = Visibility.Visible;
                 // Position button below the textbox
                 Canvas.SetLeft(FinishEditButton, editLeft + editTextBox.Width);
-                Canvas.SetTop(FinishEditButton, editTop + editTextBox.Height/3);
+                Canvas.SetTop(FinishEditButton, editTop + editTextBox.Height / 3);
             }
         }
 
@@ -303,7 +313,7 @@ namespace WpfAppTest
             if (!isEditing) return;
 
             if (editTextBox?.Text == null) return;
-            // OCRText = editTextBox.Text;
+            OCRText = editTextBox.Text;
             TranslatedText = Translate.GetTranslation(editTextBox.Text);
             translatedTextBlock.Text = TranslatedText;
 

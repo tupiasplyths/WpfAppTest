@@ -2,5 +2,19 @@
     "window.zoomLevel": -1,
     "editor.fontSize": 12.5,
     "editor.defaultFormatter": "ms-dotnettools.csharp",
-    "editor.formatOnPaste": true
+    "editor.formatOnPaste": true,
+    "github.copilot.enable": {
+        "*": false,
+        "plaintext": false,
+        "markdown": false,
+        "scminput": false,
+        "csharp": false,
+        "xaml": false
+    },
+    "cody.autocomplete.languages": {
+        "*": false,
+        "xaml": true,
+        "csharp": true
+    },
+    "editor.formatOnSave": true
 }

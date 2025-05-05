@@ -1,15 +1,29 @@
 
 using System.Net.Http;
 using System.Text.Json;
+using DeepL;
 namespace WpfAppTest;
+
 
 public static class Translate
 {
-    public static string GetTranslation(string text)
+    private static readonly HttpClient client = new();
+    private static readonly string? apiKeys;
+    private static readonly string? deepLApiKey;
+    private static Translator? translator;
+
+
+    static Translate()
     {
         _ = DotNetEnv.Env.Load();
-        using HttpClient client = new();
-        string? apiKeys = System.Environment.GetEnvironmentVariable("GOOGLE_API_KEYS");
+        deepLApiKey = Environment.GetEnvironmentVariable("DEEPL_API_KEY");
+        apiKeys = Environment.GetEnvironmentVariable("GOOGLE_API_KEYS");
+        if (deepLApiKey != null)
+            translator = new Translator(deepLApiKey);
+    }
+    public static string GetTranslation(string text)
+    {
+
 
         var jsonDict = new Dictionary<string, string>()
         {
@@ -28,5 +42,17 @@ public static class Translate
                             .GetProperty("translatedText")
                             .GetString() ?? "Translation Failed";
         return translatedText;
+    }
+
+    public static string DeepLTranslate(string text)
+    {
+        if (translator == null)
+        {
+            Console.WriteLine("Translator is null");
+            return "";
+        }
+        var translatedText = translator.TranslateTextAsync(text, LanguageCode.Japanese, LanguageCode.EnglishAmerican).Result;
+
+        return translatedText.ToString();
     }
 }
