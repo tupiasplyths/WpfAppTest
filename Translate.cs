@@ -2,8 +2,8 @@
 using System.Net.Http;
 using System.Text.Json;
 using DeepL;
-namespace WpfAppTest;
 
+namespace WpfAppTest;
 
 public static class Translate
 {
@@ -21,6 +21,11 @@ public static class Translate
         if (deepLApiKey != null)
             translator = new Translator(deepLApiKey);
     }
+    /// <summary>
+    /// Translates text from Japanese to English using the Google Translate API.
+    /// </summary>
+    /// <param name="text">The text to translate.</param>
+    /// <returns>The translated text, or "Translation Failed" if the translation fails.</returns>
     public static string GetTranslation(string text)
     {
 
@@ -41,9 +46,15 @@ public static class Translate
                             .GetProperty("translations")[0]
                             .GetProperty("translatedText")
                             .GetString() ?? "Translation Failed";
+        Console.WriteLine(translatedText);
         return translatedText;
     }
 
+    /// <summary>
+    /// Translates text using the DeepL API.
+    /// </summary>
+    /// <param name="text">The text to translate.</param>
+    /// <returns>The translated text, or null if an error occurred.</returns>
     public static string DeepLTranslate(string text)
     {
         if (translator == null)
@@ -51,6 +62,7 @@ public static class Translate
             Console.WriteLine("Translator is null");
             return "";
         }
+        Console.WriteLine(text);
         var translatedText = translator.TranslateTextAsync(text, LanguageCode.Japanese, LanguageCode.EnglishAmerican).Result;
 
         return translatedText.ToString();

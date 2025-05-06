@@ -162,15 +162,9 @@ namespace WpfAppTest
             bmp.Save(outputFileName, ImageFormat.Png);
             string text = useCustomOCR ? OCR.GetTextFromCustomOCR(outputFileName) : OCR.GetTextFromOCR(outputFileName);
             OCRText = text;
-            try
-            {
-                TranslatedText = Translate.DeepLTranslate(text);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
-            Console.WriteLine(text + "\n" + TranslatedText);
+            TranslatedText = Translate.GetTranslation(OCRText);
+            // TranslatedText = Translate.DeepLTranslate(OCRText);
+            Console.WriteLine(TranslatedText);
 
             // translatedTextBlock.Text = translatedText;
             if (TranslatedText != null)
@@ -266,12 +260,29 @@ namespace WpfAppTest
                     TextWrapping = TextWrapping.Wrap, // Ensure wrapping matches
                     AcceptsReturn = true // Allow multi-line editing if needed
                 };
-                Canvas.SetLeft(editTextBox, Canvas.GetLeft(translatedTextBlock) - translatedTextBlock.Width / 3);
-                Canvas.SetTop(editTextBox, Canvas.GetTop(translatedTextBlock) - editTextBox.Height - 5);
+                double textBlockLeft = Canvas.GetLeft(translatedTextBlock);
+                double textBlockTop = Canvas.GetTop(translatedTextBlock);
 
-                double editLeft = Canvas.GetLeft(translatedTextBlock);
-                double editTop = Canvas.GetTop(translatedTextBlock);
+                // Determine if the TextBox should be placed above or below the TextBlock
+                double availableSpaceAbove = textBlockTop;
+                double availableSpaceBelow = vancas.ActualHeight - (textBlockTop + translatedTextBlock.ActualHeight);
 
+                if (availableSpaceAbove > availableSpaceBelow)
+                {
+                    // Place the TextBox above the TextBlock
+                    Canvas.SetLeft(editTextBox, textBlockLeft);
+                    Canvas.SetTop(editTextBox, textBlockTop - editTextBox.Height - 5);
+                }
+                else
+                {
+                    // Place the TextBox below the TextBlock
+                    Canvas.SetLeft(editTextBox, textBlockLeft);
+                    Canvas.SetTop(editTextBox, textBlockTop + translatedTextBlock.ActualHeight + 5);
+                }
+
+
+                double editLeft = Canvas.GetLeft(editTextBox);
+                double editTop = Canvas.GetTop(editTextBox);
 
                 // Hide the TextBlock and add the TextBox
                 translatedTextBlock.Visibility = Visibility.Collapsed;
@@ -318,6 +329,7 @@ namespace WpfAppTest
             translatedTextBlock.Text = TranslatedText;
 
             translatedTextBlock.Visibility = Visibility.Visible;
+            FinishEditButton.Visibility = Visibility.Collapsed;
             vancas.Children.Remove(editTextBox);
             editTextBox = null;
             isEditing = false;
@@ -365,6 +377,12 @@ namespace WpfAppTest
 
         private void Quit()
         {
+            if (editTextBox != null)
+            {
+                editTextBox.LostFocus -= EditTextBox_LostFocus;
+                editTextBox.KeyDown -= EditTextBox_KeyDown;
+            }
+            CursorClipper.UnClipCursor();
             GC.Collect();
             MangaOCR.CleanUp();
             Application.Current.Shutdown();
@@ -373,6 +391,10 @@ namespace WpfAppTest
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             TopButtonStack.Visibility = Visibility.Collapsed;
+            CursorClipper.UnClipCursor();
+            BG.Source = null;
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
