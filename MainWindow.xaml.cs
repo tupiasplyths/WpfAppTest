@@ -404,6 +404,7 @@ namespace WpfAppTest
             KeyDown += HandleKeyDown;
             SetImageToBackground();
             ModelToggleButton.ToolTip = "Using Manga OCR (Click to switch to Custom OCR)";
+            SearchToggleButton.ToolTip = "Show Dictionary Search";
 
             if (IsMouseOver)
             {
@@ -427,6 +428,11 @@ namespace WpfAppTest
             vancas.MouseEnter -= Canvas_MouseEnter;
             vancas.MouseLeave -= Canvas_MouseLeave;
 
+            SearchToggleButton.Checked -= SearchToggleButton_Checked;
+            SearchToggleButton.Unchecked -= SearchToggleButton_Unchecked;
+            SearchExecuteButton.Click -= SearchExecuteButton_Click;
+            SearchTermTextBox.KeyDown -= SearchTermTextBox_KeyDown;
+
             if (editTextBox != null)
             {
                 editTextBox.LostFocus -= EditTextBox_LostFocus;
@@ -447,6 +453,62 @@ namespace WpfAppTest
         {
             useCustomOCR = false;
             ModelToggleButton.ToolTip = "Using Manga OCR (Click to switch to Custom OCR)";
+        }
+
+        private void SearchToggleButton_Checked(object sender, RoutedEventArgs e)
+        {
+            SearchPanel.Visibility = Visibility.Visible;
+            SearchToggleButton.ToolTip = "Hide Dictionary Search";
+            SearchTermTextBox.Focus();
+        }
+
+        private void SearchToggleButton_Unchecked(object sender, RoutedEventArgs e)
+        {
+            SearchPanel.Visibility = Visibility.Collapsed;
+            SearchToggleButton.ToolTip = "Show Dictionary Search";
+        }
+
+        private void SearchExecuteButton_Click(object sender, RoutedEventArgs e)
+        {
+            PerformSearch();
+        }
+
+        private void SearchTermTextBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                PerformSearch();
+                e.Handled = true; // Prevents further processing of the Enter key
+            }
+        }
+
+        private void PerformSearch()
+        {
+            string searchTerm = SearchTermTextBox.Text.Trim();
+            if (string.IsNullOrWhiteSpace(searchTerm))
+            {
+                Console.WriteLine("Search term is empty or whitespace.");
+                return;
+            }
+
+            try
+            {
+                List<string> searchResults = WWWJDict.LookUp(searchTerm);
+                if (searchResults.Count == 0 || (searchResults.Count == 1 && searchResults[0] == "No dictionary entries found."))
+                {
+                    SearchResultsListBox.ItemsSource = new List<string> { "No results found." };
+                }
+                else
+                {
+                    SearchResultsListBox.ItemsSource = searchResults;
+                }
+            }
+            catch (Exception ex)
+            {
+                SearchResultsListBox.ItemsSource = new List<string> { $"Error during search: {ex.Message}" };
+                Console.WriteLine($"Search Error: {ex}");
+            }
+
         }
     }
 }
