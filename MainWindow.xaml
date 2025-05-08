@@ -177,11 +177,32 @@
             </StackPanel>
             <ListBox
                 x:Name="SearchResultsListBox"
-                Height="100"
+                Height="150"
                 Margin="5"
                 Background="{wpfui:ThemeResource ControlFillColorDefaultBrush}"
                 BorderBrush="{wpfui:ThemeResource ControlStrokeColorDefaultBrush}"
-                BorderThickness="1"/>
+                BorderThickness="1">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Margin="0,5">
+                            <TextBlock>
+                                <Run Text="{Binding Word}" FontWeight="Bold"/>
+                                <Run Text="["/>
+                                <Run Text="{Binding Reading}"/>
+                                <Run Text="]"/>
+                            </TextBlock>
+                            <ItemsControl ItemsSource="{Binding Meanings}" Margin="10,0,0,0">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding}" TextWrapping="Wrap"/>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
         </StackPanel>
         
     </Grid>

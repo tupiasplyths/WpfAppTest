@@ -63,21 +63,28 @@ public static partial class WWWJDict
             Console.WriteLine("Input string is empty or whitespace.");
             return [];
         }
-        var results = LookUp(inputString).ToString();
 
-        string[] lines = results.Trim().Split('\n');
+        // Get the list of string results
+        var results = LookUp(inputString);
         List<JapaneseWord> japaneseWords = [];
 
-        foreach (string line in lines)
+        foreach (string line in results)
         {
-            string[] parts = line.Split(new[] { " [" }, StringSplitOptions.None);
+            if (string.IsNullOrWhiteSpace(line))
+                continue;
+
+            string[] parts = line.Split([" ["], StringSplitOptions.None);
             if (parts.Length < 2)
             {
                 continue;
             }
 
             string word = parts[0].Trim();
-            string[] readingAndMeanings = parts[1].Split(new[] { "]" }, StringSplitOptions.None);
+            string[] readingAndMeanings = parts[1].Split(["] "], StringSplitOptions.None);
+
+            if (readingAndMeanings.Length < 2)
+                continue;
+
             string reading = readingAndMeanings[0].Trim();
             string meaningsString = readingAndMeanings[1].Trim().TrimStart('/');
 
@@ -87,8 +94,8 @@ public static partial class WWWJDict
             for (int i = 0; i < meanings.Length; i++)
             {
                 string meaning = meanings[i].Trim();
-                meaning = MyRegex().Replace(meaning, "");
-                meaning = MyRegex1().Replace(meaning, "");
+                meaning = System.Text.RegularExpressions.Regex.Replace(meaning, @"^\(.*?\)\s*", "");
+                meaning = System.Text.RegularExpressions.Regex.Replace(meaning, @"^\(\d+\)\s*", "");
                 if (!string.IsNullOrEmpty(meaning))
                 {
                     processedMeanings.Add(meaning);
@@ -112,4 +119,9 @@ public class JapaneseWord(string word, string reading, List<string> meanings)
     public string Word { get; set; } = word;
     public string Reading { get; set; } = reading;
     public List<string> Meanings { get; set; } = meanings;
+
+    public override string ToString()
+    {
+        return $"Word: {Word}, Reading: {Reading}, Meanings: {string.Join(", ", Meanings)}";
+    }
 }

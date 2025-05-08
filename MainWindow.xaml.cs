@@ -171,7 +171,6 @@ namespace WpfAppTest
             {
                 UpdateTextBlock(TranslatedText, scaledRegion, xDimension, yDimension);
             }
-            // CloseAllWindows();
         }
 
         private void Canvas_MouseMove(object sender, MouseEventArgs e)
@@ -493,10 +492,14 @@ namespace WpfAppTest
 
             try
             {
-                List<string> searchResults = WWWJDict.LookUp(searchTerm);
-                if (searchResults.Count == 0 || (searchResults.Count == 1 && searchResults[0] == "No dictionary entries found."))
+                List<JapaneseWord> searchResults = WWWJDict.GetSearchResults(searchTerm);
+                if (searchResults.Count == 0)
                 {
-                    SearchResultsListBox.ItemsSource = new List<string> { "No results found." };
+                    // Create a dummy JapaneseWord to display "No results found"
+                    SearchResultsListBox.ItemsSource = new List<JapaneseWord>
+                    {
+                        new("No results found", "", [])
+                    };
                 }
                 else
                 {
@@ -505,7 +508,11 @@ namespace WpfAppTest
             }
             catch (Exception ex)
             {
-                SearchResultsListBox.ItemsSource = new List<string> { $"Error during search: {ex.Message}" };
+                // Create a dummy JapaneseWord to display the error
+                SearchResultsListBox.ItemsSource = new List<JapaneseWord>
+                {
+                    new("Error", "", [$"Error during search: {ex.Message}"])
+                };
                 Console.WriteLine($"Search Error: {ex}");
             }
 
