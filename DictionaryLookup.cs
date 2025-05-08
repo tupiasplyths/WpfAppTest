@@ -1,8 +1,8 @@
 using System.Net.Http;
-
+using System.Text.RegularExpressions;
 namespace WpfAppTest;
 
-public static class WWWJDict
+public static partial class WWWJDict
 {
     private static readonly HttpClient client = new();
     private static readonly string BaseUrl = "http://www.edrdg.org/cgi-bin/wwwjdic/wwwjdic?1ZUJ";
@@ -31,12 +31,13 @@ public static class WWWJDict
 
                 string[] entries = preContent.Split('\n');
 
-                int count = Math.Min(2, entries.Length);
+                int count = Math.Min(4, entries.Length);
                 for (int i = 0; i < count; i++)
                 {
                     if (!string.IsNullOrWhiteSpace(entries[i]))
                     {
                         resultsList.Add(entries[i].Trim());
+                        Console.WriteLine(entries[i].Trim());
                     }
                 }
             }
@@ -54,4 +55,61 @@ public static class WWWJDict
 
         return resultsList;
     }
+
+    public static List<JapaneseWord> GetSearchResults(string inputString)
+    {
+        if (string.IsNullOrWhiteSpace(inputString))
+        {
+            Console.WriteLine("Input string is empty or whitespace.");
+            return [];
+        }
+        var results = LookUp(inputString).ToString();
+
+        string[] lines = results.Trim().Split('\n');
+        List<JapaneseWord> japaneseWords = [];
+
+        foreach (string line in lines)
+        {
+            string[] parts = line.Split(new[] { " [" }, StringSplitOptions.None);
+            if (parts.Length < 2)
+            {
+                continue;
+            }
+
+            string word = parts[0].Trim();
+            string[] readingAndMeanings = parts[1].Split(new[] { "]" }, StringSplitOptions.None);
+            string reading = readingAndMeanings[0].Trim();
+            string meaningsString = readingAndMeanings[1].Trim().TrimStart('/');
+
+            string[] meanings = meaningsString.Split('/');
+            List<string> processedMeanings = [];
+
+            for (int i = 0; i < meanings.Length; i++)
+            {
+                string meaning = meanings[i].Trim();
+                meaning = MyRegex().Replace(meaning, "");
+                meaning = MyRegex1().Replace(meaning, "");
+                if (!string.IsNullOrEmpty(meaning))
+                {
+                    processedMeanings.Add(meaning);
+                }
+            }
+
+            japaneseWords.Add(new JapaneseWord(word, reading, processedMeanings));
+        }
+
+        return japaneseWords;
+    }
+
+    [GeneratedRegex(@"^\(.*?\)\s*")]
+    private static partial Regex MyRegex();
+    [GeneratedRegex(@"^\(\d+\)\s*")]
+    private static partial Regex MyRegex1();
+}
+
+public class JapaneseWord(string word, string reading, List<string> meanings)
+{
+    public string Word { get; set; } = word;
+    public string Reading { get; set; } = reading;
+    public List<string> Meanings { get; set; } = meanings;
 }
