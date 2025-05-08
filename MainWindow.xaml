@@ -156,25 +156,31 @@
                 </ToggleButton>
             </StackPanel>
         </Border>
+
         <StackPanel
             x:Name="SearchPanel"
             Orientation="Vertical"
-            HorizontalAlignment="Right"
-            VerticalAlignment="Bottom"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
             Margin="15"
+            MaxWidth="500"
             Background="{wpfui:ThemeResource CardBackgroundFillColorDefaultBrush}"
+            
             Visibility="Collapsed">
+            <StackPanel.Background>
+                <SolidColorBrush Color="{wpfui:ThemeResource CardBackgroundFillColorDefaultBrush}" Opacity="0.95"/>
+            </StackPanel.Background>
             <StackPanel Orientation="Horizontal" Margin="5">
-                <TextBox
-                    x:Name="SearchTermTextBox"
-                    Width="150"
-                    Margin="0,0,5,0"
-                    KeyDown="SearchTermTextBox_KeyDown" />
-                <Button
-                    x:Name="SearchExecuteButton"
-                    Content="Search"
-                    Click="SearchExecuteButton_Click" />
-            </StackPanel>
+                    <TextBox
+                        x:Name="SearchTermTextBox"
+                        Width="150"
+                        Margin="0,0,5,0"
+                        KeyDown="SearchTermTextBox_KeyDown" />
+                    <Button
+                        x:Name="SearchExecuteButton"
+                        Content="Search"
+                        Click="SearchExecuteButton_Click" />
+                </StackPanel>
             <ListBox
                 x:Name="SearchResultsListBox"
                 Height="150"
@@ -202,8 +208,8 @@
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
-
         </StackPanel>
+
         
     </Grid>
 
