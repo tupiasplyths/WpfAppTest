@@ -154,6 +154,10 @@
                     ToolTip="Toggle Dictionary Search">
                     <wpfui:SymbolIcon Symbol="Search24" />
                 </ToggleButton>
+                <Button
+                    >
+
+                </Button>
             </StackPanel>
         </Border>
 
@@ -166,10 +170,8 @@
             MaxWidth="500"
             Background="{wpfui:ThemeResource CardBackgroundFillColorDefaultBrush}"
             
-            Visibility="Collapsed">
-            <StackPanel.Background>
-                <SolidColorBrush Color="{wpfui:ThemeResource CardBackgroundFillColorDefaultBrush}" Opacity="0.95"/>
-            </StackPanel.Background>
+            Visibility="Collapsed">     
+            
             <StackPanel Orientation="Horizontal" Margin="5">
                     <TextBox
                         x:Name="SearchTermTextBox"

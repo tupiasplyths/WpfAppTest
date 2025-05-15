@@ -171,6 +171,10 @@ namespace WpfAppTest
             {
                 UpdateTextBlock(TranslatedText, scaledRegion, xDimension, yDimension);
             }
+            else
+            {
+                UpdateTextBlock(OCRText, scaledRegion, xDimension, yDimension);
+            }
         }
 
         private void Canvas_MouseMove(object sender, MouseEventArgs e)
@@ -247,11 +251,25 @@ namespace WpfAppTest
             {
                 isEditing = true;
 
+                double editBoxWidth;
+                double editBoxHeight;
+
+                if (translatedTextBlock.ActualHeight > translatedTextBlock.ActualWidth)
+                {
+                    editBoxWidth = translatedTextBlock.ActualHeight;
+                    editBoxHeight = translatedTextBlock.Width;
+                }
+                else
+                {
+                    editBoxWidth = translatedTextBlock.ActualWidth;
+                    editBoxHeight = translatedTextBlock.ActualHeight;
+                }
+
                 editTextBox = new TextBox
                 {
                     Text = OCRText, // Use original OCR text for editing
-                    Width = translatedTextBlock.ActualHeight, // Use ActualWidth for better sizing
-                    Height = translatedTextBlock.ActualWidth, // Use ActualHeight
+                    Width = editBoxWidth, // Use ActualWidth for better sizing
+                    Height = editBoxHeight, // Use ActualHeight
                     TextAlignment = TextAlignment.Left,
                     VerticalAlignment = VerticalAlignment.Center,
                     FontSize = translatedTextBlock.FontSize,
@@ -361,13 +379,15 @@ namespace WpfAppTest
         private void Window_Deactivated(object sender, EventArgs e)
         {
             Unfreeze();
-            UpdateTextBlock("", new Rectangle(0, 0, 0, 0), 0, 0);
+            // UpdateTextBlock("", new Rectangle(0, 0, 0, 0), 0, 0);
+            translatedTextBlock.Visibility = Visibility.Collapsed;
             selectBorder.BorderThickness = new Thickness(0);
         }
 
         private void Window_Activated(object sender, EventArgs e)
         {
             FreezeScreen();
+            // translatedTextBlock.Visibility = Visibility.Visible;
             if (!isEditing)
             {
                 FinishEditButton.Visibility = Visibility.Collapsed;
