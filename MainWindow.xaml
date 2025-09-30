@@ -5,7 +5,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:local="clr-namespace:WpfAppTest"
     xmlns:wpfui="http://schemas.lepo.co/wpfui/2022/xaml"
-    Title="MainWindow" 
+    Title="J2E OCR Translator" 
     Height="450" Width="800"
     Topmost="False"
     ResizeMode="NoResize"
@@ -77,12 +77,33 @@
                 TextWrapping="Wrap"
                 TextAlignment="Center"
                 VerticalAlignment="Center"
+                Cursor = "Hand"
                 FontSize="24">
                 <TextBlock.Background>
                     <SolidColorBrush Color="AntiqueWhite" Opacity="0.8"/>
                 </TextBlock.Background>
-
+                <TextBlock.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="Edit" Click="EditMenuItem_Click" />
+                    </ContextMenu>
+                </TextBlock.ContextMenu>
             </TextBlock>
+            <Button
+                x:Name="FinishEditButton"
+                Visibility="Collapsed"
+                Click="FinishEditButton_Click"
+                Padding="5"
+                Cursor="Hand"
+                ToolTip="Finish Editing">
+                <wpfui:SymbolIcon Symbol="CheckboxChecked24" />
+                <Button.Effect>
+                    <DropShadowEffect
+                        BlurRadius="16"
+                        Direction="-90"
+                        Opacity="0.8"/>
+                </Button.Effect>
+            </Button>
+            
         </Canvas>
         <Border
             x:Name="TopButtonStack"
@@ -119,8 +140,77 @@
                     ToolTip="Cancel">
                     <wpfui:SymbolIcon Symbol="Dismiss24" />
                 </Button>
+                <ToggleButton
+                    x:Name="ModelToggleButton"
+                    Checked="ModelToggleButton_Checked"
+                    Unchecked="ModelToggleButton_Unchecked"
+                    ToolTip="Toggle OCR Model">
+                    <wpfui:SymbolIcon Symbol="TextT24" />
+                </ToggleButton>
+                <ToggleButton
+                    x:Name="SearchToggleButton"
+                    Checked="SearchToggleButton_Checked"
+                    Unchecked="SearchToggleButton_Unchecked"
+                    ToolTip="Toggle Dictionary Search">
+                    <wpfui:SymbolIcon Symbol="Search24" />
+                </ToggleButton>
             </StackPanel>
         </Border>
+
+        <StackPanel
+            x:Name="SearchPanel"
+            Orientation="Vertical"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Margin="15"
+            MaxWidth="500"
+            Background="{wpfui:ThemeResource CardBackgroundFillColorDefaultBrush}"
+            
+            Visibility="Collapsed">
+            <StackPanel.Background>
+                <SolidColorBrush Color="{wpfui:ThemeResource CardBackgroundFillColorDefaultBrush}" Opacity="0.95"/>
+            </StackPanel.Background>
+            <StackPanel Orientation="Horizontal" Margin="5">
+                    <TextBox
+                        x:Name="SearchTermTextBox"
+                        Width="150"
+                        Margin="0,0,5,0"
+                        KeyDown="SearchTermTextBox_KeyDown" />
+                    <Button
+                        x:Name="SearchExecuteButton"
+                        Content="Search"
+                        Click="SearchExecuteButton_Click" />
+                </StackPanel>
+            <ListBox
+                x:Name="SearchResultsListBox"
+                Height="150"
+                Margin="5"
+                Background="{wpfui:ThemeResource ControlFillColorDefaultBrush}"
+                BorderBrush="{wpfui:ThemeResource ControlStrokeColorDefaultBrush}"
+                BorderThickness="1">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Margin="0,5">
+                            <TextBlock>
+                                <Run Text="{Binding Word}" FontWeight="Bold"/>
+                                <Run Text="["/>
+                                <Run Text="{Binding Reading}"/>
+                                <Run Text="]"/>
+                            </TextBlock>
+                            <ItemsControl ItemsSource="{Binding Meanings}" Margin="10,0,0,0">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding}" TextWrapping="Wrap"/>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </StackPanel>
+
+        
     </Grid>
 
     

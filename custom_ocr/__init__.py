@@ -1,0 +1,1 @@
+from custom_ocr.ocr import CustomOCR

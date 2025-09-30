@@ -15,17 +15,20 @@ namespace WpfAppTest
     public partial class MainWindow : Window
     {
         private bool isSelecting = false;
-        private MangaOCR OCR = new(); // Init OCR engine
+        private readonly MangaOCR OCR = new(); // Init OCR engine
         private Border selectBorder = new(); // Border for the selection rectangle
         private System.Windows.Point clickedPoint = new();
         private DisplayInfo? CurrentScreen { get; set; }
         private string? OCRText { get; set; }
-        private string? translatedText { get; set; }
+        private string? TranslatedText { get; set; }
+        private TextBox? editTextBox;
+        private bool isEditing = false;
+        private bool useCustomOCR = false; // Track which OCR model to use
 
         public MainWindow()
         {
             InitializeComponent();
-            Grid grid = new Grid();
+            Grid grid = new();
         }
 
         public void SetImageToBackground()
@@ -65,12 +68,14 @@ namespace WpfAppTest
 
         private void CancelItemClick(object sender, RoutedEventArgs e)
         {
-            CloseAllWindows();
+            // CloseAllWindows();
+            Quit();
+            return;
         }
 
         private void MinimizeWindow()
         {
-            this.WindowState = WindowState.Minimized;
+            WindowState = WindowState.Minimized;
         }
 
         private void Canvas_MouseEnter(object sender, MouseEventArgs e)
@@ -90,6 +95,8 @@ namespace WpfAppTest
         /// <param name="e">The MouseButtonEventArgs instance containing the event data.</param>
         private void Canvas_MouseDown(object sender, MouseButtonEventArgs e)
         {
+            if (e.LeftButton != MouseButtonState.Pressed) return;
+
             isSelecting = true;
             TopButtonStack.Visibility = Visibility.Collapsed;
             vancas.CaptureMouse();
@@ -145,27 +152,25 @@ namespace WpfAppTest
             Bitmap bmp = ImageMethods.GetRegionOfScreenAsBitmap(scaledRegion);
             string timeStamp = ApplicationUtilities.GetTimestamp(DateTime.Now);
             // string cwd = System.IO.Path.GetDirectoryName(System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName);
+            bool isSmallArea = scaledRegion.Width < 5 && scaledRegion.Height < 5;
+            if (isSmallArea)
+            {
+                BackgroundBrush.Opacity = 0;
+                return;
+            }
             string outputFileName = $"./output/{timeStamp}.png";
             bmp.Save(outputFileName, ImageFormat.Png);
-            string text = OCR.GetTextFromOCR(outputFileName);
+            string text = useCustomOCR ? OCR.GetTextFromCustomOCR(outputFileName) : OCR.GetTextFromOCR(outputFileName);
             OCRText = text;
-            translatedText = Translate.GetTranslation(text);
-            Console.WriteLine(text + "\n" + translatedText);
+            TranslatedText = Translate.GetTranslation(OCRText);
+            // TranslatedText = Translate.DeepLTranslate(OCRText);
+            Console.WriteLine(TranslatedText);
 
             // translatedTextBlock.Text = translatedText;
-            UpdateTextBlock(translatedText, scaledRegion, xDimension, yDimension);
-            // CloseAllWindows();
-        }
-
-        private void UpdateTextBlock(string translateText, Rectangle region, double xDimension = 0, double yDimension = 0)
-        {
-            translatedTextBlock.Text = translateText;
-            translatedTextBlock.Width = region.Width;
-            translatedTextBlock.Height = region.Height;
-
-            Canvas.SetLeft(translatedTextBlock, xDimension);
-            Canvas.SetTop(translatedTextBlock, yDimension);
-            translatedTextBlock.VerticalAlignment = VerticalAlignment.Center;
+            if (TranslatedText != null)
+            {
+                UpdateTextBlock(TranslatedText, scaledRegion, xDimension, yDimension);
+            }
         }
 
         private void Canvas_MouseMove(object sender, MouseEventArgs e)
@@ -189,40 +194,216 @@ namespace WpfAppTest
             Canvas.SetTop(selectBorder, top - 1);
         }
 
+        private void UpdateTextBlock(string translateText, Rectangle region, double xDimension = 0, double yDimension = 0)
+        {
+            translatedTextBlock.Text = translateText;
+            translatedTextBlock.Width = region.Width;
+            translatedTextBlock.Height = region.Height;
+
+            Canvas.SetLeft(translatedTextBlock, xDimension);
+            Canvas.SetTop(translatedTextBlock, yDimension);
+            translatedTextBlock.VerticalAlignment = VerticalAlignment.Center;
+        }
+
+        private void EditTextBox_LostFocus(object sender, RoutedEventArgs e)
+        {
+            FinishEditing();
+        }
+
+        private void TranslatedTextBlock_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ClickCount == 2 && !isEditing)
+            {
+                isEditing = true;
+                // UpdateTextBlock("", new Rectangle(0, 0, 0, 0), 0, 0);
+
+                editTextBox = new TextBox
+                {
+                    Text = OCRText,
+                    Width = translatedTextBlock.Width,
+                    Height = translatedTextBlock.Height,
+                    TextAlignment = TextAlignment.Left,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    FontSize = translatedTextBlock.FontSize,
+                    Background = translatedTextBlock.Background,
+                };
+
+                Canvas.SetLeft(editTextBox, Canvas.GetLeft(translatedTextBlock));
+                Canvas.SetTop(editTextBox, Canvas.GetTop(translatedTextBlock) - editTextBox.Height - 5);
+
+
+                vancas.Children.Add(editTextBox);
+                editTextBox.Focus();
+                editTextBox.SelectAll();
+                editTextBox.LostFocus += EditTextBox_LostFocus;
+                editTextBox.KeyDown += EditTextBox_KeyDown;
+            }
+            e.Handled = true;
+        }
+
+        private void EditMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            if (!isEditing)
+            {
+                isEditing = true;
+
+                editTextBox = new TextBox
+                {
+                    Text = OCRText, // Use original OCR text for editing
+                    Width = translatedTextBlock.ActualHeight, // Use ActualWidth for better sizing
+                    Height = translatedTextBlock.ActualWidth, // Use ActualHeight
+                    TextAlignment = TextAlignment.Left,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    FontSize = translatedTextBlock.FontSize,
+                    Background = translatedTextBlock.Background,
+                    TextWrapping = TextWrapping.Wrap, // Ensure wrapping matches
+                    AcceptsReturn = true // Allow multi-line editing if needed
+                };
+                double textBlockLeft = Canvas.GetLeft(translatedTextBlock);
+                double textBlockTop = Canvas.GetTop(translatedTextBlock);
+
+                // Determine if the TextBox should be placed above or below the TextBlock
+                double availableSpaceAbove = textBlockTop;
+                double availableSpaceBelow = vancas.ActualHeight - (textBlockTop + translatedTextBlock.ActualHeight);
+
+                if (availableSpaceAbove > availableSpaceBelow)
+                {
+                    // Place the TextBox above the TextBlock
+                    Canvas.SetLeft(editTextBox, textBlockLeft);
+                    Canvas.SetTop(editTextBox, textBlockTop - editTextBox.Height - 5);
+                }
+                else
+                {
+                    // Place the TextBox below the TextBlock
+                    Canvas.SetLeft(editTextBox, textBlockLeft);
+                    Canvas.SetTop(editTextBox, textBlockTop + translatedTextBlock.ActualHeight + 5);
+                }
+
+
+                double editLeft = Canvas.GetLeft(editTextBox);
+                double editTop = Canvas.GetTop(editTextBox);
+
+                // Hide the TextBlock and add the TextBox
+                translatedTextBlock.Visibility = Visibility.Collapsed;
+                vancas.Children.Add(editTextBox);
+                editTextBox.Focus();
+                editTextBox.SelectAll();
+                editTextBox.LostFocus += EditTextBox_LostFocus;
+                editTextBox.KeyDown += EditTextBox_KeyDown;
+                // Show and position the Finish Edit Button
+                FinishEditButton.Visibility = Visibility.Visible;
+                // Position button below the textbox
+                Canvas.SetLeft(FinishEditButton, editLeft + editTextBox.Width);
+                Canvas.SetTop(FinishEditButton, editTop + editTextBox.Height / 3);
+            }
+        }
+
+        private void FinishEditButton_Click(object sender, RoutedEventArgs e)
+        {
+            Console.WriteLine("Finished Editing");
+            FinishEditing();
+        }
+
+        private void EditTextBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter && (Keyboard.Modifiers & ModifierKeys.Shift) != ModifierKeys.Shift)
+            {
+                FinishEditing();
+                e.Handled = true;
+            }
+            else if (e.Key == Key.Escape)
+            {
+                CancelEditing();
+                e.Handled = true;
+            }
+        }
+
+        private void FinishEditing()
+        {
+            if (!isEditing) return;
+
+            if (editTextBox?.Text == null) return;
+            OCRText = editTextBox.Text;
+            TranslatedText = Translate.GetTranslation(editTextBox.Text);
+            translatedTextBlock.Text = TranslatedText;
+
+            translatedTextBlock.Visibility = Visibility.Visible;
+            FinishEditButton.Visibility = Visibility.Collapsed;
+            vancas.Children.Remove(editTextBox);
+            editTextBox = null;
+            isEditing = false;
+        }
+
+        private void CancelEditing()
+        {
+            if (!isEditing) return;
+
+            translatedTextBlock.Visibility = Visibility.Visible;
+            vancas.Children.Remove(editTextBox);
+            FinishEditButton.Visibility = Visibility.Collapsed;
+            editTextBox = null;
+            isEditing = false;
+        }
+
         private async void FreezeScreen()
         {
-            await Task.Delay(200);
             BackgroundBrush.Opacity = 0;
+            await Task.Delay(150);
             SetImageToBackground();
         }
 
         private void Unfreeze()
         {
-            BackgroundBrush.Opacity = 1;
+            BackgroundBrush.Opacity = 0;
             BG.Source = null;
         }
 
         private void Window_Deactivated(object sender, EventArgs e)
         {
             Unfreeze();
-            translatedTextBlock.Text = "";
+            UpdateTextBlock("", new Rectangle(0, 0, 0, 0), 0, 0);
+            selectBorder.BorderThickness = new Thickness(0);
         }
 
         private void Window_Activated(object sender, EventArgs e)
         {
             FreezeScreen();
+            if (!isEditing)
+            {
+                FinishEditButton.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        private void Quit()
+        {
+            if (editTextBox != null)
+            {
+                editTextBox.LostFocus -= EditTextBox_LostFocus;
+                editTextBox.KeyDown -= EditTextBox_KeyDown;
+            }
+            CursorClipper.UnClipCursor();
+            GC.Collect();
+            MangaOCR.CleanUp();
+            Application.Current.Shutdown();
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             TopButtonStack.Visibility = Visibility.Collapsed;
+            CursorClipper.UnClipCursor();
+            BG.Source = null;
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             WindowState = WindowState.Maximized;
-            FullWindow.Rect = new System.Windows.Rect(0, 0, Width, Height);
+            FullWindow.Rect = new Rect(0, 0, Width, Height);
             KeyDown += HandleKeyDown;
+            SetImageToBackground();
+            ModelToggleButton.ToolTip = "Using Manga OCR (Click to switch to Custom OCR)";
+            SearchToggleButton.ToolTip = "Show Dictionary Search";
 
             if (IsMouseOver)
             {
@@ -233,11 +414,108 @@ namespace WpfAppTest
         private void Window_Unloaded(object sender, RoutedEventArgs e)
         {
             BG.Source = null;
+            BG.UpdateLayout();
+            CurrentScreen = null;
+            Loaded -= Window_Loaded;
+            Unloaded -= Window_Unloaded;
+            KeyDown -= HandleKeyDown;
             TopButtonStack.Visibility = Visibility.Collapsed;
             CancelButton.Click -= CancelItemClick;
-            KeyDown -= HandleKeyDown;
+            vancas.MouseDown -= Canvas_MouseDown;
+            vancas.MouseUp -= Canvas_MouseUp;
+            vancas.MouseMove -= Canvas_MouseMove;
+            vancas.MouseEnter -= Canvas_MouseEnter;
+            vancas.MouseLeave -= Canvas_MouseLeave;
+
+            SearchToggleButton.Checked -= SearchToggleButton_Checked;
+            SearchToggleButton.Unchecked -= SearchToggleButton_Unchecked;
+            SearchExecuteButton.Click -= SearchExecuteButton_Click;
+            SearchTermTextBox.KeyDown -= SearchTermTextBox_KeyDown;
+
+            if (editTextBox != null)
+            {
+                editTextBox.LostFocus -= EditTextBox_LostFocus;
+                editTextBox.KeyDown -= EditTextBox_KeyDown;
+            }
+
             // OCR.CleanUp();
             GC.Collect();
+        }
+
+        private void ModelToggleButton_Checked(object sender, RoutedEventArgs e)
+        {
+            useCustomOCR = true;
+            ModelToggleButton.ToolTip = "Using Custom OCR (Click to switch to Manga OCR)";
+        }
+
+        private void ModelToggleButton_Unchecked(object sender, RoutedEventArgs e)
+        {
+            useCustomOCR = false;
+            ModelToggleButton.ToolTip = "Using Manga OCR (Click to switch to Custom OCR)";
+        }
+
+        private void SearchToggleButton_Checked(object sender, RoutedEventArgs e)
+        {
+            SearchPanel.Visibility = Visibility.Visible;
+            SearchToggleButton.ToolTip = "Hide Dictionary Search";
+            SearchTermTextBox.Focus();
+        }
+
+        private void SearchToggleButton_Unchecked(object sender, RoutedEventArgs e)
+        {
+            SearchPanel.Visibility = Visibility.Collapsed;
+            SearchToggleButton.ToolTip = "Show Dictionary Search";
+        }
+
+        private void SearchExecuteButton_Click(object sender, RoutedEventArgs e)
+        {
+            PerformSearch();
+        }
+
+        private void SearchTermTextBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                PerformSearch();
+                e.Handled = true; // Prevents further processing of the Enter key
+            }
+        }
+
+        private void PerformSearch()
+        {
+            string searchTerm = SearchTermTextBox.Text.Trim();
+            if (string.IsNullOrWhiteSpace(searchTerm))
+            {
+                Console.WriteLine("Search term is empty or whitespace.");
+                return;
+            }
+
+            try
+            {
+                List<JapaneseWord> searchResults = WWWJDict.GetSearchResults(searchTerm);
+                if (searchResults.Count == 0)
+                {
+                    // Create a dummy JapaneseWord to display "No results found"
+                    SearchResultsListBox.ItemsSource = new List<JapaneseWord>
+                    {
+                        new("No results found", "", [])
+                    };
+                }
+                else
+                {
+                    SearchResultsListBox.ItemsSource = searchResults;
+                }
+            }
+            catch (Exception ex)
+            {
+                // Create a dummy JapaneseWord to display the error
+                SearchResultsListBox.ItemsSource = new List<JapaneseWord>
+                {
+                    new("Error", "", [$"Error during search: {ex.Message}"])
+                };
+                Console.WriteLine($"Search Error: {ex}");
+            }
+
         }
     }
 }

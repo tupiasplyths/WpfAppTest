@@ -5,6 +5,7 @@ namespace WpfAppTest;
 public class MangaOCR
 {
     private dynamic? OCR;
+    private dynamic? customOCR;
 
     public MangaOCR()
     {
@@ -19,21 +20,37 @@ public class MangaOCR
         PythonEngine.Initialize();
         using (Py.GIL())
         {
-            dynamic module = Py.Import("manga_ocr");
-            OCR = module.MangaOcr();
+            Console.WriteLine("Python initialized");
+            dynamic os = Py.Import("os");
+            dynamic sys = Py.Import("sys");
+            sys.path.append(os.getcwd());
+            Console.WriteLine(sys.path);
+            dynamic manga_ocr = Py.Import("manga_ocr");
+            dynamic custom_ocr = Py.Import("custom_ocr");
+            OCR = manga_ocr.MangaOcr();
+            customOCR = custom_ocr.CustomOCR();
+
         }
     }
     public string GetTextFromOCR(string image_path)
     {
         using (Py.GIL())
         {
-            Console.WriteLine("Python Version: " + PythonEngine.Version);
             string text = OCR(image_path);
+            Console.WriteLine("Got text from OCR");
             return text;
         }
     }
 
-    public void CleanUp()
+    public string GetTextFromCustomOCR(string image_path)
+    {
+        using (Py.GIL())
+        {
+            return customOCR(image_path);
+        }
+    }
+
+    public static void CleanUp()
     {
         // Shutdown the Python engine when done
         PythonEngine.Shutdown();
