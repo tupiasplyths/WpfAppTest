@@ -11,6 +11,20 @@ J2E OCR Translator is a Windows desktop application built with WPF (.NET 8) for 
 - **Editable Results:** Edit OCR results and re-translate as needed.
 - **Modern UI:** Uses WPF-UI for a clean, dark-themed interface.
 
+## Screenshots
+
+### Display Translation
+
+![Display Translation](asset/translate.png)
+
+### Edit OCR Text
+
+![Edit OCR Text](asset/edit.png)
+
+### Dictionary Search
+
+![Dictionary Search](asset/search.png)
+
 ## Getting Started
 
 1. **Requirements:**
