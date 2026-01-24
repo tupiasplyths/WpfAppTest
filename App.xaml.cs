@@ -1,11 +1,6 @@
-﻿// using System;
-// using System.Configuration;
-// using System.Data;
-// using System.Diagnostics;
-// using System.IO;
-// using System.Linq;
-// using System.Reflection;
-// using System.Threading;
+﻿using System;
+using System.Diagnostics;
+using System.Threading;
 using Dapplo.Windows.User32;
 using System.Windows;
 using WpfAppTest.Extensions;
@@ -17,80 +12,88 @@ namespace WpfAppTest
     /// </summary>
     public partial class App : Application
     {
-        // private static Mutex? _mutex = null;
+        private static Mutex? _mutex = null;
         private const string AppName = "J2EOCRTranslator";
         // private static string _logPath = Path.Combine(
         //     Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
         //     "WpfAppTest_log.txt");
 
-        // protected override void OnStartup(StartupEventArgs e)
-        // {
-        //     // Log application start
-        //     LogMessage($"Application starting. Process ID: {Environment.ProcessId}");
+        protected override void OnStartup(StartupEventArgs e)
+        {
+            // Check for existing instance using a named mutex
+            bool createdNew;
+            try
+            {
+                _mutex = new Mutex(true, AppName, out createdNew);
 
-        //     // Get all running instances of this application
-        //     var currentProcess = Process.GetCurrentProcess();
-        //     var processes = Process.GetProcessesByName(currentProcess.ProcessName)
-        //         .Where(p => p.Id != currentProcess.Id)
-        //         .ToList();
+                if (!createdNew)
+                {
+                    // App is already running - activate existing window and exit this instance
+                    Console.WriteLine("Application instance already running. Exiting this instance.");
 
-        //     LogMessage($"Found {processes.Count} other instances running");
+                    // Try to bring the existing window to the foreground
+                    var currentProcess = Process.GetCurrentProcess();
+                    var processes = Process.GetProcessesByName(currentProcess.ProcessName)
+                        .Where(p => p.Id != currentProcess.Id)
+                        .ToList();
 
-        //     // Check for existing instance using a named mutex
-        //     try
-        //     {
-        //         _mutex = new Mutex(true, AppName, out bool createdNew);
+                    foreach (var process in processes)
+                    {
+                        try
+                        {
+                            if (process.MainWindowHandle != IntPtr.Zero)
+                            {
+                                NativeMethods.SetForegroundWindow(process.MainWindowHandle);
+                                Console.WriteLine($"Activated existing window with handle {process.MainWindowHandle}");
+                            }
+                            break;
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Failed to activate window: {ex.Message}");
+                        }
+                    }
 
-        //         if (!createdNew)
-        //         {
-        //             // App is already running
-        //             LogMessage("Application instance already running. Exiting this instance.");
+                    // Exit this instance
+                    Current.Shutdown();
+                    return;
+                }
 
-        //             // Try to activate the existing window
-        //             foreach (var process in processes)
-        //             {
-        //                 try
-        //                 {
-        //                     // Try to bring the existing window to the foreground
-        //                     NativeMethods.SetForegroundWindow(process.MainWindowHandle);
-        //                     LogMessage($"Activated existing window with handle {process.MainWindowHandle}");
-        //                     break;
-        //                 }
-        //                 catch (Exception ex)
-        //                 {
-        //                     LogMessage($"Failed to activate window: {ex.Message}");
-        //                 }
-        //             }
+                Console.WriteLine("Successfully acquired mutex, continuing startup");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Mutex error: {ex.Message}");
+            }
 
-        //             // Exit this instance
-        //             Current.Shutdown();
-        //             return;
-        //         }
+            // Continue with normal startup
+            base.OnStartup(e);
+        }
 
-        //         LogMessage("Successfully acquired mutex, continuing startup");
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         LogMessage($"Mutex error: {ex.Message}");
-        //     }
+        protected override void OnExit(ExitEventArgs e)
+        {
+            Console.WriteLine($"Application exiting. Process ID: {Process.GetCurrentProcess().Id}");
 
-        //     // Continue with normal startup
-        //     base.OnStartup(e);
-        // }
+            // Release the mutex when the application exits
+            if (_mutex != null)
+            {
+                try
+                {
+                    if (_mutex.WaitOne(TimeSpan.Zero, true))
+                    {
+                        _mutex.ReleaseMutex();
+                        Console.WriteLine("Released mutex");
+                    }
+                    _mutex.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error releasing mutex: {ex.Message}");
+                }
+            }
 
-        // protected override void OnExit(ExitEventArgs e)
-        // {
-        //     LogMessage($"Application exiting. Process ID: {Process.GetCurrentProcess().Id}");
-
-        //     // Release the mutex when the application exits
-        //     if (_mutex != null && _mutex.WaitOne(TimeSpan.Zero, true))
-        //     {
-        //         _mutex.ReleaseMutex();
-        //         LogMessage("Released mutex");
-        //     }
-
-        //     base.OnExit(e);
-        // }
+            base.OnExit(e);
+        }
 
         private void StartApplication(object sender, StartupEventArgs e)
         {
@@ -111,16 +114,5 @@ namespace WpfAppTest
             window.Activate();
         }
 
-        // private static void LogMessage(string message)
-        // {
-        //     try
-        //     {
-        //         File.AppendAllText(_logPath, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] {message}{Environment.NewLine}");
-        //     }
-        //     catch
-        //     {
-        //         // Ignore logging errors
-        //     }
-        // }
     }
 }

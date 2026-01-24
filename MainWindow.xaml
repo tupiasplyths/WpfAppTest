@@ -164,8 +164,6 @@
             VerticalAlignment="Top"
             Margin="15"
             MaxWidth="500"
-            Background="{wpfui:ThemeResource CardBackgroundFillColorDefaultBrush}"
-            
             Visibility="Collapsed">
             <StackPanel.Background>
                 <SolidColorBrush Color="{wpfui:ThemeResource CardBackgroundFillColorDefaultBrush}" Opacity="0.95"/>

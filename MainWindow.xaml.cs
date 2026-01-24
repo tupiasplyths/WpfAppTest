@@ -15,7 +15,7 @@ namespace WpfAppTest
     public partial class MainWindow : Window
     {
         private bool isSelecting = false;
-        private readonly MangaOCR OCR = new(); // Init OCR engine
+        private readonly MangaOCR OCR = MangaOCR.Instance; // Use singleton instance
         private Border selectBorder = new(); // Border for the selection rectangle
         private System.Windows.Point clickedPoint = new();
         private DisplayInfo? CurrentScreen { get; set; }
@@ -29,6 +29,9 @@ namespace WpfAppTest
         {
             InitializeComponent();
             Grid grid = new();
+
+            // Initialize OCR on first use instead of in constructor
+            // This prevents multiple windows during startup in release builds
         }
 
         public void SetImageToBackground()
