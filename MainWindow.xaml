@@ -61,7 +61,6 @@
                 <SolidColorBrush
                     x:Name="BackgroundBrush"
                     Opacity="0"
-                    Color="{wpfui:ThemeResource ApplicationBackgroundColor}"
                 />
             </Canvas.Background>
             <Canvas.ContextMenu>
@@ -157,56 +156,151 @@
             </StackPanel>
         </Border>
 
-        <StackPanel
+        <Border
             x:Name="SearchPanel"
-            Orientation="Vertical"
             HorizontalAlignment="Left"
             VerticalAlignment="Top"
             Margin="15"
-            MaxWidth="500"
+            MaxWidth="550"
+            Padding="12"
+            CornerRadius="12"
             Visibility="Collapsed">
-            <StackPanel.Background>
-                <SolidColorBrush Color="{wpfui:ThemeResource CardBackgroundFillColorDefaultBrush}" Opacity="0.95"/>
-            </StackPanel.Background>
-            <StackPanel Orientation="Horizontal" Margin="5">
-                    <TextBox
-                        x:Name="SearchTermTextBox"
-                        Width="150"
-                        Margin="0,0,5,0"
-                        KeyDown="SearchTermTextBox_KeyDown" />
+            <Border.Background>
+                <SolidColorBrush Color="#2C2C2C" Opacity="0.95"/>
+            </Border.Background>
+            <Border.Effect>
+                <DropShadowEffect
+                    BlurRadius="24"
+                    Direction="-90"
+                    Opacity="0.4"
+                    ShadowDepth="4"/>
+            </Border.Effect>
+            
+            <StackPanel Orientation="Vertical">
+                <!-- Search Input Section -->
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                    <Grid Width="200" Height="36" Margin="0,0,8,0">
+                        <Border
+                            Background="{wpfui:ThemeResource ControlFillColorDefaultBrush}"
+                            BorderBrush="{wpfui:ThemeResource ControlStrokeColorDefaultBrush}"
+                            BorderThickness="1"
+                            CornerRadius="6">
+                            <Grid Margin="8,0">
+                                <TextBlock
+                                    x:Name="SearchPlaceholder"
+                                    Text="Search dictionary..."
+                                    Foreground="{wpfui:ThemeResource TextFillColorTertiaryBrush}"
+                                    VerticalAlignment="Center"
+                                    Margin="0,0,28,0"
+                                    IsHitTestVisible="False"/>
+                                <TextBox
+                                    x:Name="SearchTermTextBox"
+                                    BorderThickness="0"
+                                    Background="Transparent"
+                                    VerticalContentAlignment="Center"
+                                    Padding="0"
+                                    KeyDown="SearchTermTextBox_KeyDown"
+                                    TextChanged="SearchTermTextBox_TextChanged"
+                                    Foreground="{wpfui:ThemeResource TextFillColorPrimaryBrush}"/>
+                                <Button
+                                    x:Name="ClearSearchButton"
+                                    Width="20"
+                                    Height="20"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Center"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    Padding="0"
+                                    Margin="0,0,4,0"
+                                    Click="ClearSearchButton_Click"
+                                    Visibility="Collapsed"
+                                    Cursor="Hand">
+                                    <wpfui:SymbolIcon Symbol="Circle20" FontSize="14"/>
+                                </Button>
+                            </Grid>
+                        </Border>
+                    </Grid>
                     <Button
                         x:Name="SearchExecuteButton"
-                        Content="Search"
-                        Click="SearchExecuteButton_Click" />
-                </StackPanel>
-            <ListBox
-                x:Name="SearchResultsListBox"
-                Height="150"
-                Margin="5"
-                Background="{wpfui:ThemeResource ControlFillColorDefaultBrush}"
-                BorderBrush="{wpfui:ThemeResource ControlStrokeColorDefaultBrush}"
-                BorderThickness="1">
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <StackPanel Margin="0,5">
-                            <TextBlock>
-                                <Run Text="{Binding Word}" FontWeight="Bold"/>
-                                <Run Text="["/>
-                                <Run Text="{Binding Reading}"/>
-                                <Run Text="]"/>
-                            </TextBlock>
-                            <ItemsControl ItemsSource="{Binding Meanings}" Margin="10,0,0,0">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding}" TextWrapping="Wrap"/>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
+                        Width="100"
+                        Height="36"
+                        Click="SearchExecuteButton_Click"
+                        Cursor="Hand">
+                        <StackPanel Orientation="Horizontal" Margin="8,0">
+                            <wpfui:SymbolIcon Symbol="Search24" FontSize="16" Margin="0,0,6,0"/>
+                            <TextBlock Text="Search" VerticalAlignment="Center" FontSize="12"/>
                         </StackPanel>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
-        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <!-- Results Count Indicator -->
+                <TextBlock
+                    x:Name="ResultsCountText"
+                    Text=""
+                    FontSize="11"
+                    Foreground="{wpfui:ThemeResource TextFillColorSecondaryBrush}"
+                    Margin="0,0,0,8"
+                    Visibility="Collapsed"/>
+
+                <!-- Search Results List -->
+                <Border
+                    CornerRadius="8"
+                    Background="{wpfui:ThemeResource ControlFillColorDefaultBrush}"
+                    BorderBrush="{wpfui:ThemeResource ControlStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    MaxHeight="300">
+                    <ScrollViewer 
+                        VerticalScrollBarVisibility="Auto"
+                        HorizontalScrollBarVisibility="Disabled">
+                        <ItemsControl x:Name="SearchResultsListBox">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border
+                                        Background="Transparent"
+                                        Padding="12,10"
+                                        BorderBrush="{wpfui:ThemeResource ControlStrokeColorDefaultBrush}"
+                                        BorderThickness="0,0,0,1">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="Transparent"/>
+                                                <Style.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="Background" Value="{wpfui:ThemeResource SubtleFillColorSecondaryBrush}"/>
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <StackPanel>
+                                            <!-- Word and Reading -->
+                                            <TextBlock Margin="0,0,0,6">
+                                                <Run Text="{Binding Word}" FontWeight="SemiBold" FontSize="15" Foreground="{wpfui:ThemeResource TextFillColorPrimaryBrush}"/>
+                                                <Run Text="  [" Foreground="{wpfui:ThemeResource TextFillColorTertiaryBrush}"/>
+                                                <Run Text="{Binding Reading}" Foreground="{wpfui:ThemeResource TextFillColorTertiaryBrush}" FontSize="13"/>
+                                                <Run Text="]" Foreground="{wpfui:ThemeResource TextFillColorTertiaryBrush}"/>
+                                            </TextBlock>
+                                            
+                                            <!-- Meanings -->
+                                            <ItemsControl ItemsSource="{Binding Meanings}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <TextBlock 
+                                                            Text="{Binding}" 
+                                                            TextWrapping="Wrap"
+                                                            FontSize="13"
+                                                            Foreground="{wpfui:ThemeResource TextFillColorPrimaryBrush}"
+                                                            Margin="0,3"/>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Border>
+            </StackPanel>
+        </Border>
 
         
     </Grid>

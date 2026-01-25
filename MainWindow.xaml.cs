@@ -23,7 +23,7 @@ namespace WpfAppTest
         private string? TranslatedText { get; set; }
         private TextBox? editTextBox;
         private bool isEditing = false;
-        private bool useCustomOCR = false; // Track which OCR model to use
+        private bool useCustomOCR = true; // Track which OCR model to use (set to true since manga_ocr is disabled)
 
         public MainWindow()
         {
@@ -434,6 +434,8 @@ namespace WpfAppTest
             SearchToggleButton.Unchecked -= SearchToggleButton_Unchecked;
             SearchExecuteButton.Click -= SearchExecuteButton_Click;
             SearchTermTextBox.KeyDown -= SearchTermTextBox_KeyDown;
+            SearchTermTextBox.TextChanged -= SearchTermTextBox_TextChanged;
+            ClearSearchButton.Click -= ClearSearchButton_Click;
 
             if (editTextBox != null)
             {
@@ -480,8 +482,29 @@ namespace WpfAppTest
             if (e.Key == Key.Enter)
             {
                 PerformSearch();
-                e.Handled = true; // Prevents further processing of the Enter key
+                e.Handled = true;
             }
+        }
+
+        private void SearchTermTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            ClearSearchButton.Visibility = string.IsNullOrWhiteSpace(SearchTermTextBox.Text)
+                ? Visibility.Collapsed
+                : Visibility.Visible;
+
+            SearchPlaceholder.Visibility = string.IsNullOrWhiteSpace(SearchTermTextBox.Text)
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+        }
+
+        private void ClearSearchButton_Click(object sender, RoutedEventArgs e)
+        {
+            SearchTermTextBox.Clear();
+            SearchTermTextBox.Focus();
+            ClearSearchButton.Visibility = Visibility.Collapsed;
+            SearchPlaceholder.Visibility = Visibility.Visible;
+            ResultsCountText.Visibility = Visibility.Collapsed;
+            SearchResultsListBox.ItemsSource = null;
         }
 
         private void PerformSearch()
@@ -496,29 +519,33 @@ namespace WpfAppTest
             try
             {
                 List<JapaneseWord> searchResults = WWWJDict.GetSearchResults(searchTerm);
+
                 if (searchResults.Count == 0)
                 {
-                    // Create a dummy JapaneseWord to display "No results found"
                     SearchResultsListBox.ItemsSource = new List<JapaneseWord>
                     {
-                        new("No results found", "", [])
+                        new("No results found", "", ["Try searching with different terms"])
                     };
+                    ResultsCountText.Text = "0 results found";
+                    ResultsCountText.Visibility = Visibility.Visible;
                 }
                 else
                 {
                     SearchResultsListBox.ItemsSource = searchResults;
+                    ResultsCountText.Text = $"{searchResults.Count} result{(searchResults.Count > 1 ? "s" : "")} found";
+                    ResultsCountText.Visibility = Visibility.Visible;
                 }
             }
             catch (Exception ex)
             {
-                // Create a dummy JapaneseWord to display the error
                 SearchResultsListBox.ItemsSource = new List<JapaneseWord>
                 {
                     new("Error", "", [$"Error during search: {ex.Message}"])
                 };
+                ResultsCountText.Text = "Search failed";
+                ResultsCountText.Visibility = Visibility.Visible;
                 Console.WriteLine($"Search Error: {ex}");
             }
-
         }
     }
 }
