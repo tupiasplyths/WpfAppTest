@@ -24,6 +24,7 @@ namespace WpfAppTest
         private TextBox? editTextBox;
         private bool isEditing = false;
         private bool useCustomOCR = true; // Track which OCR model to use (set to true since manga_ocr is disabled)
+        private bool captureModeEnabled = true; // Track if capture mode is enabled
 
         public MainWindow()
         {
@@ -100,6 +101,9 @@ namespace WpfAppTest
         {
             if (e.LeftButton != MouseButtonState.Pressed) return;
 
+            // Don't initiate capture if capture mode is disabled
+            if (!captureModeEnabled) return;
+
             isSelecting = true;
             TopButtonStack.Visibility = Visibility.Collapsed;
             vancas.CaptureMouse();
@@ -173,6 +177,12 @@ namespace WpfAppTest
             if (TranslatedText != null)
             {
                 UpdateTextBlock(TranslatedText, scaledRegion, xDimension, yDimension);
+            }
+
+            // Perform furigana lookup for the OCR text
+            if (!string.IsNullOrWhiteSpace(OCRText))
+            {
+                PerformFuriganaLookup(OCRText);
             }
         }
 
@@ -407,6 +417,7 @@ namespace WpfAppTest
             SetImageToBackground();
             ModelToggleButton.ToolTip = "Using Manga OCR (Click to switch to Custom OCR)";
             SearchToggleButton.ToolTip = "Show Dictionary Search";
+            FuriganaToggleButton.ToolTip = "Show Furigana Readings";
 
             if (IsMouseOver)
             {
@@ -432,6 +443,8 @@ namespace WpfAppTest
 
             SearchToggleButton.Checked -= SearchToggleButton_Checked;
             SearchToggleButton.Unchecked -= SearchToggleButton_Unchecked;
+            FuriganaToggleButton.Checked -= FuriganaToggleButton_Checked;
+            FuriganaToggleButton.Unchecked -= FuriganaToggleButton_Unchecked;
             SearchExecuteButton.Click -= SearchExecuteButton_Click;
             SearchTermTextBox.KeyDown -= SearchTermTextBox_KeyDown;
             SearchTermTextBox.TextChanged -= SearchTermTextBox_TextChanged;
@@ -470,6 +483,32 @@ namespace WpfAppTest
         {
             SearchPanel.Visibility = Visibility.Collapsed;
             SearchToggleButton.ToolTip = "Show Dictionary Search";
+        }
+
+        private void FuriganaToggleButton_Checked(object sender, RoutedEventArgs e)
+        {
+            FuriganaPanel.Visibility = Visibility.Visible;
+            FuriganaToggleButton.ToolTip = "Hide Furigana Readings";
+        }
+
+        private void FuriganaToggleButton_Unchecked(object sender, RoutedEventArgs e)
+        {
+            FuriganaPanel.Visibility = Visibility.Collapsed;
+            FuriganaToggleButton.ToolTip = "Show Furigana Readings";
+        }
+
+        private void CaptureModeToggleButton_Checked(object sender, RoutedEventArgs e)
+        {
+            captureModeEnabled = true;
+            vancas.Cursor = Cursors.Cross;
+            CaptureModeToggleButton.ToolTip = "Capture Mode Enabled (Click to disable)";
+        }
+
+        private void CaptureModeToggleButton_Unchecked(object sender, RoutedEventArgs e)
+        {
+            captureModeEnabled = false;
+            vancas.Cursor = Cursors.Arrow;
+            CaptureModeToggleButton.ToolTip = "Capture Mode Disabled (Click to enable)";
         }
 
         private void SearchExecuteButton_Click(object sender, RoutedEventArgs e)
@@ -545,6 +584,46 @@ namespace WpfAppTest
                 ResultsCountText.Text = "Search failed";
                 ResultsCountText.Visibility = Visibility.Visible;
                 Console.WriteLine($"Search Error: {ex}");
+            }
+        }
+
+        private void PerformFuriganaLookup(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                Console.WriteLine("OCR text is empty or whitespace.");
+                return;
+            }
+
+            try
+            {
+                List<JapaneseWord> furiganaResults = FuriganaLookup.GetFuriganaForText(text);
+
+                if (furiganaResults.Count == 0)
+                {
+                    FuriganaResultsListBox.ItemsSource = new List<JapaneseWord>
+                    {
+                        new("No furigana found", "", ["No kanji detected in the text"])
+                    };
+                    FuriganaCountText.Text = "0 readings found";
+                    FuriganaCountText.Visibility = Visibility.Visible;
+                }
+                else
+                {
+                    FuriganaResultsListBox.ItemsSource = furiganaResults;
+                    FuriganaCountText.Text = $"{furiganaResults.Count} reading{(furiganaResults.Count > 1 ? "s" : "")} found";
+                    FuriganaCountText.Visibility = Visibility.Visible;
+                }
+            }
+            catch (Exception ex)
+            {
+                FuriganaResultsListBox.ItemsSource = new List<JapaneseWord>
+                {
+                    new("Error", "", [$"Error during furigana lookup: {ex.Message}"])
+                };
+                FuriganaCountText.Text = "Furigana lookup failed";
+                FuriganaCountText.Visibility = Visibility.Visible;
+                Console.WriteLine($"Furigana Lookup Error: {ex}");
             }
         }
     }

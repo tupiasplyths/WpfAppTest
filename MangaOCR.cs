@@ -59,10 +59,11 @@ public class MangaOCR
                     Console.WriteLine(sys.path);
 
                     // Import and initialize OCR models
-                    dynamic manga_ocr = Py.Import("manga_ocr");
+                    // Temporarily disabled for testing - manga_ocr loads models that cause freezing
+                    // dynamic manga_ocr = Py.Import("manga_ocr");
                     dynamic custom_ocr = Py.Import("custom_ocr");
 
-                    OCR = manga_ocr.MangaOcr();
+                    // OCR = manga_ocr.MangaOcr();
                     customOCR = custom_ocr.CustomOCR();
 
                     _isInitialized = true;
@@ -86,6 +87,9 @@ public class MangaOCR
     }
     public string GetTextFromOCR(string image_path)
     {
+        // Temporarily disabled for testing - manga_ocr loads models that cause freezing
+        throw new InvalidOperationException("Manga OCR is disabled for testing. Please use Custom OCR instead.");
+        /*
         EnsureInitialized();
         using (Py.GIL())
         {
@@ -93,6 +97,7 @@ public class MangaOCR
             Console.WriteLine("Got text from OCR");
             return text;
         }
+        */
     }
 
     public string GetTextFromCustomOCR(string image_path)
