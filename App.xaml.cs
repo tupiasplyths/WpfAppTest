@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 using Dapplo.Windows.User32;
 using System.Windows;
 using WpfAppTest.Extensions;
+using DotNetEnv;
 
 namespace WpfAppTest
 {
@@ -14,12 +17,16 @@ namespace WpfAppTest
     {
         private static Mutex? _mutex = null;
         private const string AppName = "J2EOCRTranslator";
-        // private static string _logPath = Path.Combine(
-        //     Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
-        //     "WpfAppTest_log.txt");
+
+        // Configuration
+        private string _ocrServiceHost = "127.0.0.1";
+        private int _ocrServicePort = 5000;
 
         protected override void OnStartup(StartupEventArgs e)
         {
+            // Load environment variables from .env file
+            LoadConfiguration();
+
             // Check for existing instance using a named mutex
             bool createdNew;
             try
@@ -70,9 +77,38 @@ namespace WpfAppTest
             base.OnStartup(e);
         }
 
+        /// <summary>
+        /// Loads configuration from .env file and environment variables
+        /// </summary>
+        private void LoadConfiguration()
+        {
+            try
+            {
+                // Try to load from .env file if it exists
+                string envPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ".env");
+                if (File.Exists(envPath))
+                {
+                    Env.Load(envPath);
+                    Console.WriteLine($"Loaded configuration from {envPath}");
+                }
+
+                // Read configuration values
+                _ocrServiceHost = Env.GetString("OCR_SERVICE_HOST", "127.0.0.1");
+                _ocrServicePort = Env.GetInt("OCR_SERVICE_PORT", 5000);
+
+                Console.WriteLine($"Configuration: OCR Service Host={_ocrServiceHost}, Port={_ocrServicePort}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading configuration: {ex.Message}. Using defaults.");
+            }
+        }
+
+
         protected override void OnExit(ExitEventArgs e)
         {
             Console.WriteLine($"Application exiting. Process ID: {Process.GetCurrentProcess().Id}");
+
 
             // Release the mutex when the application exits
             if (_mutex != null)

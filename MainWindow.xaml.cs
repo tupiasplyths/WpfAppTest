@@ -23,7 +23,7 @@ namespace WpfAppTest
         private string? TranslatedText { get; set; }
         private TextBox? editTextBox;
         private bool isEditing = false;
-        private bool useCustomOCR = true; // Track which OCR model to use (set to true since manga_ocr is disabled)
+        private bool useCustomOCR = true; // Track which OCR model to use (set to true since GLM-OCR is the main OCR)
         private bool captureModeEnabled = true; // Track if capture mode is enabled
 
         public MainWindow()
@@ -54,17 +54,6 @@ namespace WpfAppTest
             }
         }
 
-        private void CloseAllWindows()
-        {
-            WindowCollection allWindows = Application.Current.Windows;
-            foreach (Window window in allWindows)
-            {
-                window.Close();
-            }
-
-            GC.Collect();
-        }
-
         private void HandleKeyDown(object sender, KeyEventArgs e)
         {
             KeyPressed(e.Key);
@@ -72,9 +61,7 @@ namespace WpfAppTest
 
         private void CancelItemClick(object sender, RoutedEventArgs e)
         {
-            // CloseAllWindows();
             Quit();
-            return;
         }
 
         private void MinimizeWindow()
@@ -158,7 +145,6 @@ namespace WpfAppTest
 
             Bitmap bmp = ImageMethods.GetRegionOfScreenAsBitmap(scaledRegion);
             string timeStamp = ApplicationUtilities.GetTimestamp(DateTime.Now);
-            // string cwd = System.IO.Path.GetDirectoryName(System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName);
             bool isSmallArea = scaledRegion.Width < 5 && scaledRegion.Height < 5;
             if (isSmallArea)
             {
@@ -170,10 +156,8 @@ namespace WpfAppTest
             string text = useCustomOCR ? OCR.GetTextFromCustomOCR(outputFileName) : OCR.GetTextFromOCR(outputFileName);
             OCRText = text;
             TranslatedText = Translate.GetTranslation(OCRText);
-            // TranslatedText = Translate.DeepLTranslate(OCRText);
             Console.WriteLine(TranslatedText);
 
-            // translatedTextBlock.Text = translatedText;
             if (TranslatedText != null)
             {
                 UpdateTextBlock(TranslatedText, scaledRegion, xDimension, yDimension);
@@ -415,7 +399,7 @@ namespace WpfAppTest
             FullWindow.Rect = new Rect(0, 0, Width, Height);
             KeyDown += HandleKeyDown;
             SetImageToBackground();
-            ModelToggleButton.ToolTip = "Using Manga OCR (Click to switch to Custom OCR)";
+            ModelToggleButton.ToolTip = "Using GLM-OCR (Main OCR Service)";
             SearchToggleButton.ToolTip = "Show Dictionary Search";
             FuriganaToggleButton.ToolTip = "Show Furigana Readings";
 
@@ -456,20 +440,19 @@ namespace WpfAppTest
                 editTextBox.KeyDown -= EditTextBox_KeyDown;
             }
 
-            // OCR.CleanUp();
             GC.Collect();
         }
 
         private void ModelToggleButton_Checked(object sender, RoutedEventArgs e)
         {
             useCustomOCR = true;
-            ModelToggleButton.ToolTip = "Using Custom OCR (Click to switch to Manga OCR)";
+            ModelToggleButton.ToolTip = "Using GLM-OCR (Main OCR Service)";
         }
 
         private void ModelToggleButton_Unchecked(object sender, RoutedEventArgs e)
         {
             useCustomOCR = false;
-            ModelToggleButton.ToolTip = "Using Manga OCR (Click to switch to Custom OCR)";
+            ModelToggleButton.ToolTip = "Using Legacy OCR (Fallback)";
         }
 
         private void SearchToggleButton_Checked(object sender, RoutedEventArgs e)
