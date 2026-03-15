@@ -25,6 +25,17 @@ namespace WpfAppTest
         private bool isEditing = false;
         private bool useCustomOCR = true; // Track which OCR model to use (set to true since GLM-OCR is the main OCR)
         private bool captureModeEnabled = true; // Track if capture mode is enabled
+        private bool useOllamaTranslation = false; // Track which translation service to use
+
+        /// <summary>
+        /// Gets the translation for the given text using the selected translation service.
+        /// </summary>
+        /// <param name="text">The text to translate.</param>
+        /// <returns>The translated text.</returns>
+        private string GetTranslatedText(string text)
+        {
+            return useOllamaTranslation ? Translate.OllamaTranslate(text) : Translate.GetTranslation(text);
+        }
 
         public MainWindow()
         {
@@ -134,12 +145,16 @@ namespace WpfAppTest
             currentPoint.X = Math.Round(currentPoint.X);
             currentPoint.Y = Math.Round(currentPoint.Y);
 
+            // Get the window's absolute position on the virtual screen
+            System.Windows.Point windowPos = this.GetAbsolutePosition();
+
             double xDimension = Canvas.GetLeft(selectBorder) * m.M11;
             double yDimension = Canvas.GetTop(selectBorder) * m.M22;
 
+            // Add window offset to get absolute screen coordinates
             Rectangle scaledRegion = new(
-                (int)xDimension,
-                (int)yDimension,
+                (int)(windowPos.X + xDimension),
+                (int)(windowPos.Y + yDimension),
                 (int)(selectBorder.Width * m.M11),
                 (int)(selectBorder.Height * m.M22));
 
@@ -155,7 +170,7 @@ namespace WpfAppTest
             bmp.Save(outputFileName, ImageFormat.Png);
             string text = useCustomOCR ? OCR.GetTextFromCustomOCR(outputFileName) : OCR.GetTextFromOCR(outputFileName);
             OCRText = text;
-            TranslatedText = Translate.GetTranslation(OCRText);
+            TranslatedText = GetTranslatedText(OCRText);
             Console.WriteLine(TranslatedText);
 
             if (TranslatedText != null)
@@ -197,9 +212,96 @@ namespace WpfAppTest
             translatedTextBlock.Width = region.Width;
             translatedTextBlock.Height = region.Height;
 
+            // Keep default font size (16) if text fits, otherwise shrink to fit
+            const double defaultFontSize = 16;
+            const double padding = 20;
+            double effectiveHeight = region.Height - padding;
+            double effectiveWidth = region.Width - padding;
+
+            // Check if text fits with default font size
+            double textHeightWithDefault = GetTextHeight(translateText, defaultFontSize, effectiveWidth);
+
+            if (textHeightWithDefault <= effectiveHeight)
+            {
+                // Text fits with default font size, keep it
+                translatedTextBlock.FontSize = defaultFontSize;
+            }
+            else
+            {
+                // Text doesn't fit, calculate smaller font size
+                double optimalFontSize = CalculateOptimalFontSize(translateText, region.Width, region.Height);
+                translatedTextBlock.FontSize = optimalFontSize;
+            }
+
             Canvas.SetLeft(translatedTextBlock, xDimension);
             Canvas.SetTop(translatedTextBlock, yDimension);
             translatedTextBlock.VerticalAlignment = VerticalAlignment.Center;
+        }
+
+        /// <summary>
+        /// Calculates the optimal font size to fit text within the specified width and height.
+        /// </summary>
+        /// <param name="text">The text to fit.</param>
+        /// <param name="availableWidth">The available width.</param>
+        /// <param name="availableHeight">The available height.</param>
+        /// <returns>The optimal font size.</returns>
+        private double CalculateOptimalFontSize(string text, double availableWidth, double availableHeight)
+        {
+            if (string.IsNullOrWhiteSpace(text) || availableWidth <= 0 || availableHeight <= 0)
+                return 16; // Default font size
+
+            const double maxFontSize = 16; // Maximum font size (same as default)
+            const double minFontSize = 8;  // Minimum font size
+            const double padding = 20;     // Padding around text
+
+            double effectiveWidth = availableWidth - padding;
+            double effectiveHeight = availableHeight - padding;
+
+            // Binary search for the optimal font size
+            double low = minFontSize;
+            double high = maxFontSize;
+            double optimalSize = minFontSize;
+
+            while (low <= high)
+            {
+                double mid = (low + high) / 2;
+                double textHeight = GetTextHeight(text, mid, effectiveWidth);
+
+                if (textHeight <= effectiveHeight)
+                {
+                    optimalSize = mid;
+                    low = mid + 0.5; // Try larger font
+                }
+                else
+                {
+                    high = mid - 0.5; // Try smaller font
+                }
+            }
+
+            return Math.Max(minFontSize, Math.Min(maxFontSize, optimalSize));
+        }
+
+        /// <summary>
+        /// Gets the height of text with a specific font size and width constraint.
+        /// </summary>
+        /// <param name="text">The text to measure.</param>
+        /// <param name="fontSize">The font size.</param>
+        /// <param name="width">The width constraint.</param>
+        /// <returns>The text height.</returns>
+        private double GetTextHeight(string text, double fontSize, double width)
+        {
+            var formattedText = new System.Windows.Media.FormattedText(
+                text,
+                System.Globalization.CultureInfo.CurrentCulture,
+                System.Windows.FlowDirection.LeftToRight,
+                new System.Windows.Media.Typeface("Segoe UI"),
+                fontSize,
+                System.Windows.Media.Brushes.Black,
+                new NumberSubstitution(),
+                VisualTreeHelper.GetDpi(translatedTextBlock).PixelsPerDip);
+
+            formattedText.MaxTextWidth = Math.Max(1, width);
+            return formattedText.Height;
         }
 
         private void EditTextBox_LostFocus(object sender, RoutedEventArgs e)
@@ -321,7 +423,7 @@ namespace WpfAppTest
 
             if (editTextBox?.Text == null) return;
             OCRText = editTextBox.Text;
-            TranslatedText = Translate.GetTranslation(editTextBox.Text);
+            TranslatedText = GetTranslatedText(editTextBox.Text);
             translatedTextBlock.Text = TranslatedText;
 
             translatedTextBlock.Visibility = Visibility.Visible;
@@ -402,6 +504,7 @@ namespace WpfAppTest
             ModelToggleButton.ToolTip = "Using GLM-OCR (Main OCR Service)";
             SearchToggleButton.ToolTip = "Show Dictionary Search";
             FuriganaToggleButton.ToolTip = "Show Furigana Readings";
+            TranslationToggleButton.ToolTip = "Using Google Translate (Click for Ollama)";
 
             if (IsMouseOver)
             {
@@ -429,6 +532,8 @@ namespace WpfAppTest
             SearchToggleButton.Unchecked -= SearchToggleButton_Unchecked;
             FuriganaToggleButton.Checked -= FuriganaToggleButton_Checked;
             FuriganaToggleButton.Unchecked -= FuriganaToggleButton_Unchecked;
+            TranslationToggleButton.Checked -= TranslationToggleButton_Checked;
+            TranslationToggleButton.Unchecked -= TranslationToggleButton_Unchecked;
             SearchExecuteButton.Click -= SearchExecuteButton_Click;
             SearchTermTextBox.KeyDown -= SearchTermTextBox_KeyDown;
             SearchTermTextBox.TextChanged -= SearchTermTextBox_TextChanged;
@@ -485,6 +590,8 @@ namespace WpfAppTest
             captureModeEnabled = true;
             vancas.Cursor = Cursors.Cross;
             CaptureModeToggleButton.ToolTip = "Capture Mode Enabled (Click to disable)";
+            // Dim the screen to indicate capture mode is active
+            BackgroundBrush.Opacity = 0.35;
         }
 
         private void CaptureModeToggleButton_Unchecked(object sender, RoutedEventArgs e)
@@ -492,6 +599,20 @@ namespace WpfAppTest
             captureModeEnabled = false;
             vancas.Cursor = Cursors.Arrow;
             CaptureModeToggleButton.ToolTip = "Capture Mode Disabled (Click to enable)";
+            // Make the screen clearer when capture mode is disabled
+            BackgroundBrush.Opacity = 0.15;
+        }
+
+        private void TranslationToggleButton_Checked(object sender, RoutedEventArgs e)
+        {
+            useOllamaTranslation = true;
+            TranslationToggleButton.ToolTip = "Using Ollama gemma3:1b (Click for Google Translate)";
+        }
+
+        private void TranslationToggleButton_Unchecked(object sender, RoutedEventArgs e)
+        {
+            useOllamaTranslation = false;
+            TranslationToggleButton.ToolTip = "Using Google Translate (Click for Ollama)";
         }
 
         private void SearchExecuteButton_Click(object sender, RoutedEventArgs e)

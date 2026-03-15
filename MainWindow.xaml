@@ -1,4 +1,4 @@
-﻿<Window x:Class="WpfAppTest.MainWindow"
+<Window x:Class="WpfAppTest.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -77,12 +77,14 @@
                 TextAlignment="Center"
                 VerticalAlignment="Center"
                 Cursor="Arrow"
-                FontSize="24"
+                FontSize="16"
+                Foreground="DarkSlateGray"
                 IsReadOnly="True"
                 IsReadOnlyCaretVisible="False"
                 BorderThickness="0"
                 SelectionBrush="DodgerBlue"
-                SelectionOpacity="0.5">
+                SelectionOpacity="0.5"
+                VerticalScrollBarVisibility="Disabled">
                 <TextBox.Background>
                     <SolidColorBrush Color="AntiqueWhite" Opacity="0.8"/>
                 </TextBox.Background>
@@ -175,6 +177,13 @@
                     IsChecked="True"
                     ToolTip="Capture Mode Enabled (Click to disable)">
                     <wpfui:SymbolIcon Symbol="Cursor24" />
+                </ToggleButton>
+                <ToggleButton
+                    x:Name="TranslationToggleButton"
+                    Checked="TranslationToggleButton_Checked"
+                    Unchecked="TranslationToggleButton_Unchecked"
+                    ToolTip="Using Google Translate (Click for Ollama)">
+                    <wpfui:SymbolIcon Symbol="Globe24" />
                 </ToggleButton>
             </StackPanel>
         </Border>
